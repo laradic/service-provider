@@ -1,0 +1,34 @@
+{
+    "name": "laradic/service-provider",
+    "description": "Laravel 5 service provider on steroids. Lots of extras.",
+    "homepage": "https://la.radic.nl",
+    "keywords": ["laravel", "laradic", "container", "ioc", "provider", "service", "repositories", "structure"],
+    "license": "MIT",
+    "authors": [
+        {"name": "Robin Radic", "homepage": "http://robin.radic.nl", "email": "robin@radic.nl", "role": "Developer"}
+    ],
+    "require": {
+        "php": ">=5.5.9",
+        "illuminate/support": "~5.0"
+    },
+    "require-dev": {
+        "laradic/testing": "~1.0",
+        "laradic/phing": "~1.0",
+        "orchestra/testbench": "~3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laradic\\ServiceProvider\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Laradic\\Tests\\ServiceProvider\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
