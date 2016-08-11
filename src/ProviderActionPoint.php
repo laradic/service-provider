@@ -3,8 +3,8 @@ namespace Laradic\ServiceProvider;
 
 final class ProviderActionPoint
 {
-    const ON_REGISTER = 'register';
-    const ON_REGISTERED = 'registered';
-    const ON_BOOT = 3;
-    const ON_BOOTED = 4;
+    const REGISTER = 10;
+    const REGISTERED = 100;
+    const BOOT = 10;
+    const BOOTED = 100;
 }

@@ -3,13 +3,20 @@ namespace Laradic\ServiceProvider;
 
 class MyCustomServiceProvider extends CustomServiceProvider
 {
-    protected $provides = [
-
+    protected $configFiles = [
+        'laradic.custom-provider',
     ];
 
-    protected $middleware = [
+    public function register()
+    {
+        $app = parent::register();
 
-    ];
+        $a = 'a';
+
+        $this->getRootDir();
+
+        return $app;
+    }
 
 
 }

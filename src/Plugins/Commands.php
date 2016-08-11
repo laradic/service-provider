@@ -9,10 +9,12 @@ use ReflectionClass;
 /**
  * This is the class Commands.
  *
+ * @property-read \Illuminate\Foundation\Application $app
+ * @mixin \Laradic\ServiceProvider\BaseServiceProvider
+ *
  * @package        Laradic\ServiceProvider
  * @author         CLI
  * @copyright      Copyright (c) 2015, CLI. All rights reserved
- * @mixin BaseServiceProvider
  */
 trait Commands
 {
@@ -51,7 +53,12 @@ trait Commands
      */
     protected $findCommandsExtending = 'Symfony\Component\Console\Command\Command';
 
-    protected function startCommandsPlugin()
+    /**
+     * startCommandsPlugin method
+     *
+     * @param \Illuminate\Foundation\Application $app
+     */
+    protected function startCommandsPlugin($app)
     {
 
         $this->onRegister('commands', 100, function($app){

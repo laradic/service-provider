@@ -1,6 +1,19 @@
 <?php
 namespace Laradic\ServiceProvider\Plugins;
 
+use Laradic\ServiceProvider\ProviderActionPoint;
+use Laradic\ServiceProvider\ProviderRegisterMethod;
+
+/**
+ * This is the class Providers.
+ *
+ * @property-read \Illuminate\Foundation\Application $app
+ * @mixin \Laradic\ServiceProvider\BaseServiceProvider
+ *
+ * @package        Laradic\ServiceProvider
+ * @author         CLI
+ * @copyright      Copyright (c) 2015, CLI. All rights reserved
+ */
 trait  Providers
 {
 
@@ -23,9 +36,9 @@ trait  Providers
      *
      * @var int
      */
-    protected $registerProvidersOn = self::ON_REGISTER;
+    protected $registerProvidersOn = ProviderActionPoint::REGISTER;
 
-    protected $registerProvidersMethod = self::METHOD_REGISTER;
+    protected $registerProvidersMethod = ProviderRegisterMethod::REGISTER;
 
 
     /**
@@ -56,8 +69,60 @@ trait  Providers
     protected $bootedMethod = 'booted';
 
 
+    /**
+     * startProvidersPlugin method
+     *
+     * @param \Illuminate\Foundation\Application $app
+     */
     protected function startProvidersPlugin($app)
     {
-
+        $this->onRegister('providers', $this->registerProvidersOn, function ($app) {
+            $this->tryRequireHelpers($this->registerProvidersOn);
+            $this->tryRegisterProviders($this->registerProvidersOn);
+        });
     }
+
+
+    /**
+     * This will check method
+     *
+     * @param $on
+     */
+    protected function tryRequireHelpers($on)
+    {
+        foreach ( $this->helpers as $filePath => $for ) {
+            if ( $on === $for ) {
+                require_once path_join($this->getRootDir(), $filePath);
+            }
+        }
+    }
+
+    /**
+     * tryRegisterProviders method
+     *
+     * @param $on
+     */
+    protected function tryRegisterProviders($on)
+    {
+        if ( $on === $this->registerProvidersOn && $this->registerProvidersMethod === ProviderRegisterMethod::REGISTER ) {
+            // FIRST register all given providers
+            foreach ( $this->providers as $provider ) {
+                $this->app->register($provider);
+            }
+
+            foreach ( $this->deferredProviders as $provider ) {
+                $this->app->registerDeferredProvider($provider);
+            }
+        } elseif ( $this->registerProvidersMethod === ProviderRegisterMethod::RESOLVE ) {
+            foreach ( $this->providers as $provider ) {
+                $resolved = $this->app->resolveProviderClass($registered[] = $provider);
+                if ( $on === ProviderActionPoint::REGISTER ) {
+                    $resolved->register();
+                } elseif ( $on === ProviderActionPoint::BOOT ) {
+                    $this->app->call([ $provider, 'boot' ]);
+                }
+            }
+        }
+    }
+
 }

@@ -47,9 +47,14 @@ trait Bindings
     protected $aliases = [ ];
 
 
-    protected function startBindingsPlugin()
+    /**
+     * startBindingsPlugin method
+     *
+     * @param \Illuminate\Foundation\Application $app
+     */
+    protected function startBindingsPlugin($app)
     {
-
-
+        /** @var \Illuminate\Foundation\Application $app */
+        $this->requiresPlugins(Commands::class, Events::class);
     }
 }

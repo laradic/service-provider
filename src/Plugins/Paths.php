@@ -1,159 +1,104 @@
 <?php
 namespace Laradic\ServiceProvider\Plugins;
 
-trait  Paths
+use Laradic\Support\Util;
+
+/**
+ * This is the class Paths.
+ *
+ * @property-read \Illuminate\Foundation\Application $app
+ * @mixin \Laradic\ServiceProvider\BaseServiceProvider
+ *
+ * @package        Laradic\ServiceProvider
+ * @author         CLI
+ * @copyright      Copyright (c) 2015, CLI. All rights reserved
+ */
+trait Paths
 {
+    protected $resolvedPaths;
 
-    /*
-     |---------------------------------------------------------------------
-     | Resources properties
-     |---------------------------------------------------------------------
-     |
-     */
-
-    /**
-     * Path to resources directory, relative to package root
-     *
-     * @var string
-     */
-    protected $resourcesPath = 'resources'; //'../resources';
-
-    /**
-     * Resource destination path, relative to base_path
-     *
-     * @var string
-     */
-    protected $resourcesDestinationPath = 'resources';
-
-
-    /*
-     |---------------------------------------------------------------------
-     | Views properties
-     |---------------------------------------------------------------------
-     |
-     */
-
-    /**
-     * View destination path, relative to base_path
-     *
-     * @var string
-     */
-    protected $viewsDestinationPath = '{resourcesDestinationPath}/views/vendor/{namespace}';
-
-    /**
-     * Package views path, relative to package root
-     *
-     * @var string
-     */
-    protected $viewsPath = '{resourcesPath}/{dirName}';
-
-    /**
-     * A collection of directories in this package containing views.
-     * ['dirName' => 'namespace']
-     *
-     * @var array
-     */
-    protected $viewDirs = [ /* 'dirName' => 'namespace' */ ];
-
-
-    /*
-     |---------------------------------------------------------------------
-     | Assets properties
-     |---------------------------------------------------------------------
-     |
-     */
-
-    /**
-     * Assets destination path, relative to base_path
-     *
-     * @var string
-     */
-    protected $assetsDestinationPath = 'public/vendor/{namespace}';
-
-    /**
-     * Package assets path, relative to package root folder
-     *
-     * @var string
-     */
-    protected $assetsPath = '{resourcesPath}/{dirName}';
-
-    /**
-     * A collection of directories in this package containing assets.
-     * ['dirName' => 'namespace']
-     *
-     * @var array
-     */
-    protected $assetDirs = [ /* 'dirName' => 'namespace' */ ];
-
-
-    /*
-     |---------------------------------------------------------------------
-     | Configuration properties
-     |---------------------------------------------------------------------
-     |
-     */
-
-    /**
-     * Collection of configuration files.
-     *
-     * @var array
-     */
-    protected $configFiles = [ ];
-
-    /**
-     * Path to the config directory, relative to package root folder
-     *
-     * @var string
-     */
-    protected $configPath = 'config';
-
-    protected $configStrategy = 'defaultConfigStrategy';
-
-    /*
-     |---------------------------------------------------------------------
-     | Database properties
-     |---------------------------------------------------------------------
-     |
-     */
-
-    /**
-     * Path to the migration destination directory, relative to package root folder
-     *
-     * @var string
-     */
-    protected $migrationDestinationPath = '{databasePath}/migrations';
-
-    /**
-     * Path to the seeds destination directory, relative to package root folder
-     *
-     * @var string
-     */
-    protected $seedsDestinationPath = '{databasePath}/seeds';
-
-    /**
-     * Path to database directory, relative to  package root folder
-     *
-     * @var string
-     */
-    protected $databasePath = 'database';
-
-    /**
-     * Array of directory names/paths relative to $databasePath containing seed files.
-     *
-     * @var array
-     */
-    protected $seedDirs = [ /* 'dirName', */ ];
-
-    /**
-     * Array of directory names/paths relative to $databasePath containing migration files.
-     *
-     * @var array
-     */
-    protected $migrationDirs = [ /* 'dirName', */ ];
-
-
-    protected function startPathsPlugin($app)
+    public function startPathsPlugin($app)
     {
+    }
 
+
+    /**
+     * resolvePath method
+     *
+     * @todo
+     *
+     * @param string $pathPropertyName
+     * @param array  $extras
+     *
+     * @return string
+     */
+    protected function resolvePath($pathPropertyName, array $extras = [ ])
+    {
+        $resolvedPaths = $this->getResolvedPaths();
+
+        $extras[ 'path' ] = [
+            'app'     => $this->app[ 'path' ],
+            'envFile' => $this->app->environmentFilePath(),
+            'env'     => $this->app->environmentPath(),
+            'cached'  => [
+                'compile'  => $this->app->getCachedCompilePath(),
+                'config'   => $this->app->getCachedConfigPath(),
+                'routes'   => $this->app->getCachedRoutesPath(),
+                'services' => $this->app->getCachedServicesPath(),
+            ],
+        ];
+        foreach ( [ 'base', 'lang', 'config', 'public', 'storage', 'database', 'bootstrap' ] as $key ) {
+            $extras[ 'path' ][ $key ] = $this->app[ 'path.' . $key ];
+        }
+
+        return Util::template($resolvedPaths[ $pathPropertyName ], $extras);
+    }
+
+    protected function getLaravelPaths()
+    {
+        $paths = [
+            'app'     => $this->app[ 'path' ],
+            'envFile' => $this->app->environmentFilePath(),
+            'env'     => $this->app->environmentPath(),
+            'cached'  => [
+                'compile'  => $this->app->getCachedCompilePath(),
+                'config'   => $this->app->getCachedConfigPath(),
+                'routes'   => $this->app->getCachedRoutesPath(),
+                'services' => $this->app->getCachedServicesPath(),
+            ],
+        ];
+        foreach ( [ 'base', 'lang', 'config', 'public', 'storage', 'database', 'bootstrap' ] as $key ) {
+            $paths[ $key ] = $this->app[ 'path.' . $key ];
+        }
+        return $paths;
+    }
+
+    /**
+     * resolvePaths method
+     *
+     * @todo
+     * @return array
+     */
+    protected function getResolvedPaths()
+    {
+        if ( null === $this->resolvedPaths ) {
+            //$this->resolveDirectories();
+
+            $paths = array_dot([ 'path' => $this->getLaravelPaths() ]);
+            // Collect all path properties and put them into $paths associatively using propertyName => propertyValue
+            collect(array_keys(get_class_vars(get_class($this))))->filter(function ($propertyName) {
+                return ends_with($propertyName, 'Path');
+            })->each(function ($propertyName) use (&$paths) {
+                $paths[ $propertyName ] = $this->{$propertyName}; //
+            });
+
+            $paths[ 'packagePath' ] = $this->getRootDir();
+
+            // Use the paths to generate parsed paths, resolving all the {vars}
+            $this->resolvedPaths = collect($paths)->transform(function ($path) use ($paths) {
+                return Util::template($path, $paths);
+            })->toArray();
+        }
+        return $this->resolvedPaths;
     }
 }
