@@ -17,11 +17,6 @@ trait Paths
 {
     protected $resolvedPaths;
 
-    public function startPathsPlugin($app)
-    {
-    }
-
-
     /**
      * resolvePath method
      *

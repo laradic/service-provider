@@ -41,6 +41,8 @@ trait Middleware
      */
     protected $routeMiddleware = [ ];
 
+    protected $middlewarePluginPriority = 20;
+
     /**
      * startMiddlewarePlugin method
      *
@@ -48,7 +50,7 @@ trait Middleware
      */
     protected function startMiddlewarePlugin($app)
     {
-        $this->onRegister('middleware', 1, function ($app) {
+        $this->onRegister('middleware', function ($app) {
             if ( !$app->runningInConsole() ) {
                 $router = $app->make('router');
                 $kernel = $app->make('Illuminate\Contracts\Http\Kernel');
@@ -65,7 +67,6 @@ trait Middleware
                     $router->middleware($key, $middleware);
                 }
             }
-
         });
     }
 

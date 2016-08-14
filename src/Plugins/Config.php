@@ -15,7 +15,7 @@ use Illuminate\Contracts\Foundation\Application;
  */
 trait Config
 {
-
+    protected $configPluginPriority = [ 10, 10 ];
 
     protected $configStrategy = 'defaultConfigStrategy';
 
@@ -27,10 +27,10 @@ trait Config
     protected function startConfigPlugin($app)
     {
         $this->requiresPlugins(Resources::class, Paths::class);
-        $this->onRegister('config', 1, function ($app) {
+        $this->onRegister('config', function ($app) {
             $this->registerConfigFiles();
         });
-        $this->onBoot('config', 10, function ($app) {
+        $this->onBoot('config', function ($app) {
             $this->bootConfigFiles();
         });
     }

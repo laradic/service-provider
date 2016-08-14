@@ -2,6 +2,7 @@
 namespace Laradic\ServiceProvider;
 
 use Closure;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Laradic\Filesystem\Filesystem;
@@ -39,12 +40,76 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
 
     protected $scanDirsMaxLevel = 4;
 
+    // extra event handlers
+
+    /**
+     * Declaring the method named here will make it so it will be called on application booting
+     *
+     * @var string|null
+     */
+    protected $bootingMethod = 'booting';
+
+    /**
+     * Declaring the method named here will make it so it will be called when the application has booted
+     *
+     * @var string|null
+     */
+    protected $bootedMethod = 'booted';
+
+
 
     public function __construct(\Illuminate\Contracts\Foundation\Application $app)
     {
         parent::__construct($app);
         $this->startIfNotStarted();
         $this->fs = Filesystem::create();
+    }
+
+    /**
+     * boot method
+     *
+     * @return \Illuminate\Contracts\Foundation\Application
+     */
+    public function boot()
+    {
+        $app = $this->app;
+
+        $this->fireCallbacks('boot', function (Collection $list) {
+            return $list->sortBy('priority');
+        });
+
+
+        return $app;
+    }
+
+    /**
+     * register method
+     *
+     * @return \Illuminate\Contracts\Foundation\Application
+     */
+    public function register()
+    {
+        $app = $this->app;
+        $this->resolveDirectories();
+
+        if ( $this->bootingMethod !== null && method_exists($this, $this->bootingMethod) ) {
+            $this->app->booting(function (Application $app) {
+                $app->call([ $this, $this->bootingMethod ]);
+            });
+        }
+
+        if ( $this->bootedMethod !== null && method_exists($this, $this->bootedMethod) ) {
+            $this->app->booted(function (Application $app) {
+                $app->call([ $this, $this->bootedMethod ]);
+            });
+        }
+
+        $this->fireCallbacks('register', function (Collection $list) {
+            return $list->sortBy('priority');
+        });
+
+
+        return $app;
     }
 
 
@@ -114,13 +179,33 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
         $this->providesCallbacks[] = compact('name', 'callback');
     }
 
-    public function onRegister($name, $priority, Closure $callback)
+    /**
+     * getPluginPriority method
+     *
+     * @param     $name
+     * @param int $index If a plugin priority is defined as array, the 0 index is for register and 1 for boot.
+     *
+     * @return int|mixed
+     */
+    private function getPluginPriority($name, $index = 0)
     {
+        $priority = 10;
+        if ( property_exists($this, "{$name}PluginPriority") ) {
+            $value    = $this->{$name . 'PluginPriority'};
+            $priority = is_array($value) ? $value[ $index ] : $value;
+        }
+        return $priority;
+    }
+
+    public function onRegister($name, Closure $callback)
+    {
+        $priority                  = $this->getPluginPriority($name);
         $this->registerCallbacks[] = compact('name', 'priority', 'callback');
     }
 
-    public function onBoot($name, $priority, Closure $callback)
+    public function onBoot($name, Closure $callback)
     {
+        $priority              = $this->getPluginPriority($name, 1);
         $this->bootCallbacks[] = compact('name', 'priority', 'callback');
     }
 
@@ -134,41 +219,6 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
             $callback->call($this, $this->app);
         };
         $list->pluck('callback')->each($caller);
-    }
-
-    /**
-     * boot method
-     *
-     * @return \Illuminate\Contracts\Foundation\Application
-     */
-    public function boot()
-    {
-        $app = $this->app;
-
-        $this->fireCallbacks('boot', function (Collection $list) {
-            return $list->sortBy('priority');
-        });
-
-
-        return $app;
-    }
-
-    /**
-     * register method
-     *
-     * @return \Illuminate\Contracts\Foundation\Application
-     */
-    public function register()
-    {
-        $app = $this->app;
-        $this->resolveDirectories();
-
-        $this->fireCallbacks('register', function (Collection $list) {
-            return $list->sortBy('priority');
-        });
-
-
-        return $app;
     }
 
     /**

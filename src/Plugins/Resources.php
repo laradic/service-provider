@@ -2,11 +2,11 @@
 namespace Laradic\ServiceProvider\Plugins;
 
 /**
- * This is the class Paths.
+ * This is the class Resources.
  *
  * @property-read \Illuminate\Foundation\Application $app
  * @mixin \Laradic\ServiceProvider\BaseServiceProvider
- *
+ * @mixin Paths
  * @package        Laradic\ServiceProvider
  * @author         CLI
  * @copyright      Copyright (c) 2015, CLI. All rights reserved
@@ -14,13 +14,12 @@ namespace Laradic\ServiceProvider\Plugins;
 trait  Resources
 {
 
+    /** @var string */
     protected $packagePath = '{rootDir}';
-
-    #protected $destinationPath = '{path.base}';
 
     /*
      |---------------------------------------------------------------------
-     | Resources properties
+     | Resources
      |---------------------------------------------------------------------
      |
      */
@@ -42,7 +41,7 @@ trait  Resources
 
     /*
      |---------------------------------------------------------------------
-     | Views properties
+     | Views
      |---------------------------------------------------------------------
      |
      */
@@ -72,7 +71,7 @@ trait  Resources
 
     /*
      |---------------------------------------------------------------------
-     | Assets properties
+     | Assets
      |---------------------------------------------------------------------
      |
      */
@@ -102,7 +101,7 @@ trait  Resources
 
     /*
      |---------------------------------------------------------------------
-     | Configuration properties
+     | Configuration
      |---------------------------------------------------------------------
      |
      */
@@ -114,6 +113,7 @@ trait  Resources
      */
     protected $configFiles = [ ];
 
+    /** @var string */
     protected $configDestinationPath = '{path.config}';
 
     /**
@@ -123,13 +123,32 @@ trait  Resources
      */
     protected $configPath = '{packagePath}/config';
 
+
     /*
      |---------------------------------------------------------------------
-     | Database properties
+     | Translation
      |---------------------------------------------------------------------
      |
      */
 
+    /** @var string */
+    protected $translationDestinationPath = '{resourcesDestinationPath}/lang/vendor/{namespace}';
+
+    /** @var string */
+    protected $translationPath = '{resourcePath}/{dirName}';
+
+    /** @var array */
+    protected $translationDirs = [ /* 'dirName' => 'namespace', */ ];
+
+
+    /*
+     |---------------------------------------------------------------------
+     | Database | Migrations | Seeds
+     |---------------------------------------------------------------------
+     |
+     */
+
+    /** @var string */
     protected $databaseDestinationPath = '{path.database}';
 
     /**
@@ -139,6 +158,7 @@ trait  Resources
      */
     protected $databasePath = '{packagePath}/database';
 
+
     /**
      * Path to the migration destination directory
      *
@@ -146,7 +166,16 @@ trait  Resources
      */
     protected $migrationDestinationPath = '{databaseDestinationPath}/migrations';
 
+    /** @var string */
     protected $migrationsPath = '{databasePath}/migrations';
+
+    /**
+     * Array of directory names/paths relative to $databasePath containing migration files.
+     *
+     * @var array
+     */
+    protected $migrationDirs = [ /* 'dirName', */ ];
+
 
     /**
      * Path to the seeds destination directory
@@ -155,6 +184,7 @@ trait  Resources
      */
     protected $seedsDestinationPath = '{databaseDestinationPath}/seeds';
 
+    /** @var string */
     protected $seedsPath = '{databasePath}/seeds';
 
     /**
@@ -164,22 +194,41 @@ trait  Resources
      */
     protected $seedDirs = [ /* 'dirName', */ ];
 
-    /**
-     * Array of directory names/paths relative to $databasePath containing migration files.
-     *
-     * @var array
-     */
-    protected $migrationDirs = [ /* 'dirName', */ ];
+
+    /** @var int */
+    protected $resourcesPluginPriority = 20;
 
     /**
      * startPathsPlugin method
      *
      * @param \Illuminate\Foundation\Application $app
      */
-    protected function startResourcesPlugin($app)
+    protected function startResourcesPlugin()
     {
         $this->requiresPlugins(Paths::class);
+        $this->onBoot('resources', function () {
+            foreach ( $this->viewDirs as $dirName => $namespace ) {
+                $viewPath = $this->resolvePath('viewsPath', compact('dirName'));
+                $this->loadViewsFrom($viewPath, $namespace);
+                $this->publishes([ $viewPath => $this->resolvePath('viewsDestinationPath', compact('namespace')) ], 'views');
+            }
+
+            foreach ( $this->translationDirs as $dirName => $namespace ) {
+                $transPath = $this->resolvePath('translationPath', compact('dirName'));
+                $this->loadTranslationsFrom($transPath, $namespace);
+                $this->publishes([ $transPath => $this->resolvePath('translationDestinationPath', compact('namespace')) ], 'translations');
+            }
+
+            foreach ( $this->assetDirs as $dirName => $namespace ) {
+                $this->publishes([ $this->resolvePath('assetsPath', compact('dirName')) => $this->resolvePath('assetsDestinationPath', compact('namespace')) ], 'public');
+            }
+
+            foreach ( $this->migrationDirs as $dirPath ) {
+                $this->publishes([ $this->getDatabasePath($dirPath) => $this->resolvePath('migrationDestinationPath') ], 'database');
+            }
+            foreach ( $this->seedDirs as $dirPath ) {
+                $this->publishes([ $this->getDatabasePath($dirPath) => $this->resolvePath('seedsDestinationPath') ], 'database');
+            }
+        });
     }
-
-
 }

@@ -53,6 +53,8 @@ trait Commands
      */
     protected $findCommandsExtending = 'Symfony\Component\Console\Command\Command';
 
+    protected $commandsPluginPriority = 40;
+
     /**
      * startCommandsPlugin method
      *
@@ -61,7 +63,7 @@ trait Commands
     protected function startCommandsPlugin($app)
     {
 
-        $this->onRegister('commands', 100, function($app){
+        $this->onRegister('commands', function ($app) {
             /** @var \Illuminate\Foundation\Application $app */
             // Commands
             if ( $app->runningInConsole() ) {
@@ -107,9 +109,9 @@ trait Commands
         $classes = [ ];
         foreach ( $this->findCommandsFiles($path) as $filePath ) {
 
-            $class = $classFinder->findClass($filePath);
+            //$class = $classFinder->findClass($filePath);
 
-            //$class = Util::getClassNameFromFile($filePath);
+            $class = Util::getClassNameFromFile($filePath);
             if ( $class !== null ) {
                 $namespace = Util::getNamespaceFromFile($filePath);
                 if ( $namespace !== null ) {

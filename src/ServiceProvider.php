@@ -6,14 +6,14 @@ namespace Laradic\ServiceProvider;
 abstract class ServiceProvider extends BaseServiceProvider
 {
     use
-        Plugins\Resources,
-        Plugins\Config,
         Plugins\Bindings,
         Plugins\Commands,
-        Plugins\Paths,
+        Plugins\Config,
         Plugins\Events,
+        Plugins\Facades,
+        Plugins\Helpers,
         Plugins\Middleware,
-        Plugins\Providers;
-
-
+        Plugins\Paths,
+        Plugins\Providers,
+        Plugins\Resources;
 }

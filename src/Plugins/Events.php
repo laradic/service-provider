@@ -13,6 +13,22 @@ namespace Laradic\ServiceProvider\Plugins;
  */
 trait Events
 {
+    protected $eventsPluginPriority = 10;
+
+    /**
+     * The event handler mappings for the application.
+     *
+     * @var array
+     */
+    protected $listen = [ ];
+
+    /**
+     * The subscriber classes to register.
+     *
+     * @var array
+     */
+    protected $subscribe = [ ];
+
     /**
      * startEventsPlugin method
      *
@@ -20,6 +36,19 @@ trait Events
      */
     protected function startEventsPlugin($app)
     {
+        $this->onBoot('events', function ($app) {
+            $events = $this->app->make('events');
+
+            foreach ( $this->listens() as $event => $listeners ) {
+                foreach ( $listeners as $listener ) {
+                    $events->listen($event, $listener);
+                }
+            }
+
+            foreach ( $this->subscribe as $subscriber ) {
+                $events->subscribe($subscriber);
+            }
+        });
     }
 
 
@@ -33,5 +62,16 @@ trait Events
     {
         $dispatcher = $this->app->make('events');
         $dispatcher->listen($events, $handler);
+    }
+
+
+    /**
+     * Get the events and handlers.
+     *
+     * @return array
+     */
+    public function listens()
+    {
+        return $this->listen;
     }
 }
