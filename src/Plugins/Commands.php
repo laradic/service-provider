@@ -53,7 +53,7 @@ trait Commands
      */
     protected $findCommandsExtending = 'Symfony\Component\Console\Command\Command';
 
-    protected $commandsPluginPriority = 40;
+    protected $commandsPluginPriority = 50;
 
     /**
      * startCommandsPlugin method

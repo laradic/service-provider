@@ -15,7 +15,7 @@ use Illuminate\Contracts\Foundation\Application;
  */
 trait Config
 {
-    protected $configPluginPriority = [ 10, 10 ];
+    protected $configPluginPriority = [ 20, 10 ];
 
     protected $configStrategy = 'defaultConfigStrategy';
 

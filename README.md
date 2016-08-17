@@ -1,6 +1,7 @@
 Laradic Service Provider
 ========================
 
+
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](https://tldrlegal.com/license/mit-license)
 
 A general support package for the Laravel 5 framework. Laradic Support provides flexible and reusable components of code for commonly used functionality as well as the means to customize the default Laravel 5 folder structure.
@@ -17,6 +18,10 @@ composer require laradic/service-provider=~1.0
 
 Documentation
 -------------
+The full documentation can be found [here](https://la.radic.nl/service-provider) 
+
+Quick overview
+--------------
 
 The code you write in your Service Providers is often very repetative and feels like you've already done so a hundreth times.
 
@@ -34,8 +39,7 @@ A comparison of handling resources.
 **The "default" way**
 Use predefined methods inside your `register` and/or `boot` directory to hook up to the `vendor:publish` command.  
 ```php
-use Illuminate\Support\ServiceProvider;
-class MyServiceProvider extends ServiceProvider {
+class MyServiceProvider extends \Illuminate\Support\ServiceProvider {
     public function boot(){
         // config: blade-extensions
         $publishPath = function_exists('config_path') ? config_path('blade_extensions.php') : base_path('config/blade_extensions.php');
@@ -65,8 +69,7 @@ class MyServiceProvider extends ServiceProvider {
 **The "Laradic" way**
 Override properties to define key values.  
 ```php
-use Laradic\ServiceProvider\ServiceProvider;
-class MyServiceProvider extends ServiceProvider{
+class MyServiceProvider extends \Laradic\ServiceProvider\ServiceProvider {
     protected $configFiles = ['blade_extensions'];
     protected $viewDirs = ['views' => 'blade-ext'];
     protected $migrationDirs = ['migrations'];
@@ -75,17 +78,33 @@ class MyServiceProvider extends ServiceProvider{
 } 
 ```
 
-I can already hear you say "Wait, what! That's probably gonna force me to use a opinionated directory structure".
+Of course, it's entirely possible to re-configure paths as well. You don't have to stick to the default directory structure. 
+But that's beyond the scope of this example and can be found in the documentation.
 
-Calm down, you've just seen a very, very small part of Laradic Service Providers. 
-The next example shows   
+#### Bindings and Commands Example
 
+**The "default" way**
 
-## Prioritties
-10 config
-20 helpers
-30 providers
-40 middlewares
-50 bindings
-60 commands
-70 facades
+**The "Laradic" way**
+Override properties to define key values.  
+```php
+class MyServiceProvider extends \Laradic\ServiceProvider\ServiceProvider {
+    // Will look for all commands inside the 'Console' directory relative to this service provider
+    protected $findCommands = ['Console']; 
+} 
+```
+or
+```php
+class MyServiceProvider extends \Laradic\ServiceProvider\ServiceProvider {
+    // Register by FQN
+    protected $commands = [Console\MyCommand::class]; 
+    // or by custom binding name  
+    protected $commands = ['commands.my.command' => Console\MyCommand::class];  
+} 
+```
+
+Again, more variations and options exist which are beyond the scope of this example. Go read the [documentation](https://la.radic.nl/service-provider)
+
+### Register and Boot
+The `ServiceProvider` does not override existing functionality. Its entirely possible to let it ignore all the xtra stuff.
+If you want to use the `register` and `boot` methods while 

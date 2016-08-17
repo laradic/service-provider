@@ -62,7 +62,7 @@ trait Bindings
      */
     protected $aliases = [ ];
 
-    protected $bindingsPluginPriority = 30;
+    protected $bindingsPluginPriority = 40;
 
 
     /**

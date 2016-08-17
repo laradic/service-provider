@@ -24,7 +24,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Laradic\\Tests\\ServiceProvider\\": "tests/"
+            "Laradic\\Tests\\ServiceProvider\\": "tests/",
+            "TestVendor\\TestPkg11\\": "resources/fixture/testvendor/testpkg11/src"
         }
     },
     "extra": {

@@ -41,7 +41,7 @@ trait Middleware
      */
     protected $routeMiddleware = [ ];
 
-    protected $middlewarePluginPriority = 20;
+    protected $middlewarePluginPriority = 30;
 
     /**
      * startMiddlewarePlugin method

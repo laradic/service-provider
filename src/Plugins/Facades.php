@@ -9,7 +9,7 @@ trait Facades
      */
     protected $facades = [ /* 'Form' => Path\To\Facade::class */ ];
 
-    protected $facadesPluginPriority = 50;
+    protected $facadesPluginPriority = 60;
 
     protected function startFacadesPlugin($app)
     {

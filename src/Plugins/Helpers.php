@@ -4,7 +4,7 @@ namespace Laradic\ServiceProvider\Plugins;
 trait Helpers
 {
 
-    protected $helpersPluginPriority = 10;
+    protected $helpersPluginPriority = 70;
 
     protected function startHelpersPlugin()
     {

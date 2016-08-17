@@ -6,6 +6,7 @@ namespace Laradic\ServiceProvider\Plugins;
  *
  * @property-read \Illuminate\Foundation\Application $app
  * @mixin \Laradic\ServiceProvider\BaseServiceProvider
+ *
  * @mixin Paths
  * @package        Laradic\ServiceProvider
  * @author         CLI
@@ -13,6 +14,10 @@ namespace Laradic\ServiceProvider\Plugins;
  */
 trait  Resources
 {
+
+    /** @var int */
+    protected $resourcesPluginPriority = 15;
+
 
     /** @var string */
     protected $packagePath = '{rootDir}';
@@ -135,7 +140,7 @@ trait  Resources
     protected $translationDestinationPath = '{resourcesDestinationPath}/lang/vendor/{namespace}';
 
     /** @var string */
-    protected $translationPath = '{resourcePath}/{dirName}';
+    protected $translationPath = '{resourcesPath}/{dirName}';
 
     /** @var array */
     protected $translationDirs = [ /* 'dirName' => 'namespace', */ ];
@@ -167,7 +172,7 @@ trait  Resources
     protected $migrationDestinationPath = '{databaseDestinationPath}/migrations';
 
     /** @var string */
-    protected $migrationsPath = '{databasePath}/migrations';
+    protected $migrationsPath = '{databasePath}/{dirName}';
 
     /**
      * Array of directory names/paths relative to $databasePath containing migration files.
@@ -185,7 +190,7 @@ trait  Resources
     protected $seedsDestinationPath = '{databaseDestinationPath}/seeds';
 
     /** @var string */
-    protected $seedsPath = '{databasePath}/seeds';
+    protected $seedsPath = '{databasePath}/{dirName}';
 
     /**
      * Array of directory names/paths relative to $databasePath containing seed files.
@@ -195,8 +200,6 @@ trait  Resources
     protected $seedDirs = [ /* 'dirName', */ ];
 
 
-    /** @var int */
-    protected $resourcesPluginPriority = 20;
 
     /**
      * startPathsPlugin method
@@ -223,11 +226,11 @@ trait  Resources
                 $this->publishes([ $this->resolvePath('assetsPath', compact('dirName')) => $this->resolvePath('assetsDestinationPath', compact('namespace')) ], 'public');
             }
 
-            foreach ( $this->migrationDirs as $dirPath ) {
-                $this->publishes([ $this->getDatabasePath($dirPath) => $this->resolvePath('migrationDestinationPath') ], 'database');
+            foreach ( $this->migrationDirs as $dirName ) {
+                $this->publishes([ $this->resolvePath('migrationsPath', compact('dirName')) => $this->resolvePath('migrationDestinationPath') ], 'database');
             }
-            foreach ( $this->seedDirs as $dirPath ) {
-                $this->publishes([ $this->getDatabasePath($dirPath) => $this->resolvePath('seedsDestinationPath') ], 'database');
+            foreach ( $this->seedDirs as $dirName ) {
+                $this->publishes([ $this->resolvePath('seedsPath', compact('dirName')) => $this->resolvePath('seedsDestinationPath') ], 'database');
             }
         });
     }

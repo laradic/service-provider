@@ -1,8 +1,6 @@
 <?php
 namespace Laradic\ServiceProvider\Plugins;
 
-use Laradic\Support\Util;
-
 /**
  * This is the class Paths.
  *
@@ -15,42 +13,58 @@ use Laradic\Support\Util;
  */
 trait Paths
 {
+    protected $pathsPluginPriority = 0;
+
     protected $resolvedPaths;
+
 
     /**
      * resolvePath method
      *
      * @todo
      *
-     * @param string $pathPropertyName
-     * @param array  $extras
+     * @param       $pathPropertyName
+     * @param array $extras
      *
      * @return string
      */
-    protected function resolvePath($pathPropertyName, array $extras = [ ])
+    protected function resolvePath($name, array $extras = [ ])
     {
-        $resolvedPaths = $this->getResolvedPaths();
-
-        $extras[ 'path' ] = [
-            'app'     => $this->app[ 'path' ],
-            'envFile' => $this->app->environmentFilePath(),
-            'env'     => $this->app->environmentPath(),
-            'cached'  => [
-                'compile'  => $this->app->getCachedCompilePath(),
-                'config'   => $this->app->getCachedConfigPath(),
-                'routes'   => $this->app->getCachedRoutesPath(),
-                'services' => $this->app->getCachedServicesPath(),
-            ],
-        ];
-        foreach ( [ 'base', 'lang', 'config', 'public', 'storage', 'database', 'bootstrap' ] as $key ) {
-            $extras[ 'path' ][ $key ] = $this->app[ 'path.' . $key ];
+        if ( $this->resolvedPaths === null ) {
+            $this->resolvedPaths = $this->getPaths();
         }
+        if ( str_contains($this->resolvedPaths[ $name ], [ '{', '}' ]) ) {
+            preg_match_all('/{(.*?)}/', $this->resolvedPaths[ $name ], $matches);
+            foreach ( $matches[ 0 ] as $i => $match ) {
+                $var = $matches[ 1 ][ $i ];
+                if ( false === array_key_exists($var, $this->resolvedPaths) ) {
+                    continue;
+                }
+                $this->resolvedPaths[ $name ] = str_replace($match, $this->resolvePath($var, $extras), $this->resolvedPaths[ $name ]);
+            }
 
-        return Util::template($resolvedPaths[ $pathPropertyName ], $extras);
+            foreach ( $extras as $key => $val ) {
+                $this->resolvedPaths[ $name ] = str_replace('{' . $key . '}', $val, $this->resolvedPaths[ $name ]);
+            }
+        }
+        return $this->resolvedPaths[ $name ];
     }
 
-    protected function getLaravelPaths()
+    private function getPaths()
     {
+        $paths = array_dot([ 'path' => $this->getLaravelPaths() ]);
+        collect(array_keys(get_class_vars(get_class($this))))->filter(function ($propertyName) {
+            return ends_with($propertyName, 'Path');
+        })->each(function ($propertyName) use (&$paths) {
+            $paths[ $propertyName ] = $this->{$propertyName}; //
+        });
+        $paths[ 'packagePath' ] = $this->getRootDir();
+        return $paths;
+    }
+
+    private function getLaravelPaths()
+    {
+
         $paths = [
             'app'     => $this->app[ 'path' ],
             'envFile' => $this->app->environmentFilePath(),
@@ -65,35 +79,8 @@ trait Paths
         foreach ( [ 'base', 'lang', 'config', 'public', 'storage', 'database', 'bootstrap' ] as $key ) {
             $paths[ $key ] = $this->app[ 'path.' . $key ];
         }
+        $paths[ 'resource' ] = resource_path();
+
         return $paths;
-    }
-
-    /**
-     * resolvePaths method
-     *
-     * @todo
-     * @return array
-     */
-    protected function getResolvedPaths()
-    {
-        if ( null === $this->resolvedPaths ) {
-            //$this->resolveDirectories();
-
-            $paths = array_dot([ 'path' => $this->getLaravelPaths() ]);
-            // Collect all path properties and put them into $paths associatively using propertyName => propertyValue
-            collect(array_keys(get_class_vars(get_class($this))))->filter(function ($propertyName) {
-                return ends_with($propertyName, 'Path');
-            })->each(function ($propertyName) use (&$paths) {
-                $paths[ $propertyName ] = $this->{$propertyName}; //
-            });
-
-            $paths[ 'packagePath' ] = $this->getRootDir();
-
-            // Use the paths to generate parsed paths, resolving all the {vars}
-            $this->resolvedPaths = collect($paths)->transform(function ($path) use ($paths) {
-                return Util::template($path, $paths);
-            })->toArray();
-        }
-        return $this->resolvedPaths;
     }
 }

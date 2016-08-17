@@ -33,7 +33,7 @@ trait  Providers
      *
      * @var int
      */
-    protected $registerProvidersOn = 'register'; // register | boot
+    protected $registerProvidersOn = 'register'; // Inside service provider: 'register' or 'boot'. By application event: 'booting' or 'booted'
 
     /** @var string */
     protected $registerProvidersMethod = 'register'; // register | resolve
@@ -49,16 +49,30 @@ trait  Providers
      */
     protected function startProvidersPlugin($app)
     {
-        if ( $this->registerProvidersOn === 'register' ) {
-            $this->onRegister('providers', function () {
-                $this->handleProviders();
-            });
-        } elseif ( $this->registerProvidersOn === 'boot' ) {
-            $this->onBoot('providers', function () {
-                $this->handleProviders();
-            });
-        } else {
-            throw new \LogicException('registerProvidersOn not valid');
+        switch ( $this->registerProvidersOn ) {
+            case 'register':
+                $this->onRegister('providers', function () {
+                    $this->handleProviders();
+                });
+                break;
+            case 'booting':
+                $this->app->booting(function () {
+                    $this->handleProviders();
+                });
+                break;
+            case 'boot':
+                $this->onBoot('providers', function () {
+                    $this->handleProviders();
+                });
+                break;
+            case 'booted':
+                $this->app->booted(function () {
+                    $this->handleProviders();
+                });
+                break;
+            default:
+                throw new \LogicException('registerProvidersOn not valid');
+                break;
         }
     }
 

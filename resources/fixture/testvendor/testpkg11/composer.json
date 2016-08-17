@@ -1,0 +1,10 @@
+{
+    "name": "testvendor/testpkg11",
+    "description": "For testing service-provider",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "TestVendor\\TestPkg11\\": "src"
+        }
+    }
+}
