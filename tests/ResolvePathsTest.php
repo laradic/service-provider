@@ -1,7 +1,6 @@
 <?php
 namespace Laradic\Tests\ServiceProvider;
 
-use Laradic\Tests\ServiceProvider\Fixture\FixtureServiceProvider;
 use TestVendor\TestPkg11\TestPkg11ServiceProvider;
 
 class ResolvePathsTest extends TestCase
@@ -11,9 +10,11 @@ class ResolvePathsTest extends TestCase
         $p = new TestPkg11ServiceProvider($this->app);
         $p->register();
 
-        $rootDir = $p->getRootDir();
-        $paths   = $p->resolvePath('assetsPath');
-        $paths2  = $p->resolvePath('assetsDestinationPath');
-        $a       = 'a';
+        $dirName               = 'assets';
+        $namespace             = 'testpkg11';
+        $rootDir               = $p->getRootDir();
+        $assetsPath            = $p->resolvePath('assetsPath', compact('dirName', 'namespace'));
+        $assetsDestinationPath = $p->resolvePath('assetsDestinationPath', compact('dirName', 'namespace'));
+        $a                     = 'a';
     }
 }

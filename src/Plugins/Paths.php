@@ -28,7 +28,7 @@ trait Paths
      *
      * @return string
      */
-    protected function resolvePath($name, array $extras = [ ])
+    public function resolvePath($name, array $extras = [ ])
     {
         if ( $this->resolvedPaths === null ) {
             $this->resolvedPaths = $this->getPaths();
