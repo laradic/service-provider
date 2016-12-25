@@ -27,7 +27,7 @@ trait Commands
      * <?php
      * $new = new ServiceProvider;
      */
-    protected $commands = [ ];
+    protected $commands = [];
 
     /**
      * Commands that are found are bound in the container using this string as prefix
@@ -39,7 +39,7 @@ trait Commands
      * Collection of paths to search for commands
      * @var array
      */
-    protected $findCommands = [ ];
+    protected $findCommands = [];
 
     /**
      * If true, the $findCommands path will be searched recursively (all subdirectories will be scanned) for commands
@@ -74,7 +74,7 @@ trait Commands
                     $this->commands = array_merge($this->commands, $classes);
                 }
                 if ( is_array($this->commands) && count($this->commands) > 0 ) {
-                    $commands = [ ];
+                    $commands = [];
                     foreach ( $this->commands as $k => $v ) {
                         if ( is_string($k) ) {
                             $app[ $this->commandPrefix . $k ] = $app->share(function ($app) use ($k, $v) {
@@ -90,7 +90,6 @@ trait Commands
                 }
             }
         });
-
     }
 
 
@@ -106,7 +105,7 @@ trait Commands
     {
         $classFinder = new \Illuminate\Filesystem\ClassFinder;
 
-        $classes = [ ];
+        $classes = [];
         foreach ( $this->findCommandsFiles($path) as $filePath ) {
 
             //$class = $classFinder->findClass($filePath);
@@ -119,7 +118,12 @@ trait Commands
                 }
                 $class   = Str::removeLeft($class, '\\');
                 $parents = class_parents($class);
+
                 if ( $this->findCommandsExtending !== null && in_array($this->findCommandsExtending, $parents, true) === false ) {
+                    continue;
+                }
+                $ref = new \ReflectionClass($class);
+                if ( $ref->isAbstract() ) {
                     continue;
                 }
                 $classes[] = Str::removeLeft($class, '\\');
@@ -140,7 +144,7 @@ trait Commands
         $glob = glob($directory . '/*');
 
         if ( $glob === false ) {
-            return [ ];
+            return [];
         }
 
         // To get the appropriate files, we'll simply glob the directory and filter

@@ -1,8 +1,15 @@
 <?php
 namespace Laradic\ServiceProvider;
 
-
-
+/**
+ * This is the class ServiceProvider.
+ *
+ * @package        Laradic\ServiceProvider
+ * @author         CLI
+ * @copyright      Copyright (c) 2015, CLI. All rights reserved
+ *
+ * @property \Illuminate\Contracts\Config\Repository $config
+ */
 abstract class ServiceProvider extends BaseServiceProvider
 {
     use

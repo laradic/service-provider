@@ -19,6 +19,13 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
     protected $fs;
 
 
+    // magic
+
+    protected $getVariables = [];
+
+    protected $callCallbacks = [];
+
+
     // plugins
 
     private $started = false;
@@ -272,5 +279,22 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
         return $this->rootDir;
     }
 
+    public function __call($method, $params = [])
+    {
+        if($this->callCallbacks[$method]){
+            return call_user_func_array($method, $params);
+        }
+        throw new \BadMethodCallException("Method [{$method}] not found");
+    }
+
+    public function __get($name)
+    {
+        if(isset($this->getVariables[$name])){
+            $var = $this->getVariables[$name];
+            if($var instanceof Closure){
+                return $var->call($this);
+            }
+        }
+    }
 
 }

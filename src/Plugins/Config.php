@@ -26,6 +26,10 @@ trait Config
      */
     protected function startConfigPlugin($app)
     {
+        $this->getVariables['config'] = function(){
+            return $this->app->make('config');
+        };
+
         $this->requiresPlugins(Resources::class, Paths::class);
         $this->onRegister('config', function ($app) {
             $this->registerConfigFiles();
