@@ -1,4 +1,15 @@
 <?php
+/**
+ * Part of the Laradic PHP Packages.
+ *
+ * Copyright (c) 2017. Robin Radic.
+ *
+ * The license can be found in the package and online at https://laradic.mit-license.org.
+ *
+ * @copyright Copyright 2017 (c) Robin Radic
+ * @license https://laradic.mit-license.org The MIT License
+ */
+
 namespace Laradic\ServiceProvider\Plugins;
 
 /**
@@ -64,13 +75,13 @@ trait Paths
 
     private function getLaravelPaths()
     {
-
+        $is54 = version_compare(\Illuminate\Foundation\Application::VERSION, '5.4.0', '>');
         $paths = [
             'app'     => $this->app[ 'path' ],
             'envFile' => $this->app->environmentFilePath(),
             'env'     => $this->app->environmentPath(),
             'cached'  => [
-                'compile'  => $this->app->getCachedCompilePath(),
+                'compile'  => $is54 ? null : $this->app->getCachedCompilePath(),
                 'config'   => $this->app->getCachedConfigPath(),
                 'routes'   => $this->app->getCachedRoutesPath(),
                 'services' => $this->app->getCachedServicesPath(),

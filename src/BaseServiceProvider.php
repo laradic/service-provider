@@ -1,4 +1,15 @@
 <?php
+/**
+ * Part of the Laradic PHP Packages.
+ *
+ * Copyright (c) 2017. Robin Radic.
+ *
+ * The license can be found in the package and online at https://laradic.mit-license.org.
+ *
+ * @copyright Copyright 2017 (c) Robin Radic
+ * @license https://laradic.mit-license.org The MIT License
+ */
+
 namespace Laradic\ServiceProvider;
 
 use Closure;
@@ -223,7 +234,8 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
             $list = call_user_func_array($modifier, [ $list ]);
         }
         $caller = $caller ?: function (Closure $callback) {
-            $callback->call($this, $this->app);
+            $callback->bindTo($this);
+            $callback($this->app);
         };
         $list->pluck('callback')->each($caller);
     }
