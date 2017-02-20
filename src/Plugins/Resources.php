@@ -1,4 +1,15 @@
 <?php
+/**
+ * Part of the Laradic PHP Packages.
+ *
+ * Copyright (c) 2017. Robin Radic.
+ *
+ * The license can be found in the package and online at https://laradic.mit-license.org.
+ *
+ * @copyright Copyright 2017 (c) Robin Radic
+ * @license https://laradic.mit-license.org The MIT License
+ */
+
 namespace Laradic\ServiceProvider\Plugins;
 
 /**
@@ -41,7 +52,7 @@ trait  Resources
      *
      * @var string
      */
-    protected $resourcesDestinationPath = '{path.resources}';
+    protected $resourcesDestinationPath = '{path.resource}';
 
 
     /*
@@ -67,7 +78,9 @@ trait  Resources
 
     /**
      * A collection of directories in this package containing views.
-     * ['dirName' => 'namespace']
+     *
+     * Using ['dirName' => 'namespace'] it binds the directory to a namespace.
+     * This enables view('namespace::path.to.view') and includes it with vendor:publish
      *
      * @var array
      */
@@ -146,6 +159,10 @@ trait  Resources
     protected $translationDirs = [ /* 'dirName' => 'namespace', */ ];
 
 
+    public function _test()
+    {
+
+    }
     /*
      |---------------------------------------------------------------------
      | Database | Migrations | Seeds
@@ -163,7 +180,6 @@ trait  Resources
      */
     protected $databasePath = '{packagePath}/database';
 
-
     /**
      * Path to the migration destination directory
      *
@@ -180,6 +196,12 @@ trait  Resources
      * @var array
      */
     protected $migrationDirs = [ /* 'dirName', */ ];
+
+    /**
+     * Migrations will be loaded automaticly. If you want to publish the migrations, this should be true
+     * @var bool
+     */
+    protected $publishMigrations = false;
 
 
     /**
@@ -227,7 +249,11 @@ trait  Resources
             }
 
             foreach ( $this->migrationDirs as $dirName ) {
-                $this->publishes([ $this->resolvePath('migrationsPath', compact('dirName')) => $this->resolvePath('migrationDestinationPath') ], 'database');
+                $migrationPaths = $this->resolvePath('migrationsPath', compact('dirName'));
+                $this->loadMigrationsFrom($migrationPaths);
+                if($this->publishMigrations) {
+                    $this->publishes([ $migrationPaths => $this->resolvePath('migrationDestinationPath') ], 'database');
+                }
             }
             foreach ( $this->seedDirs as $dirName ) {
                 $this->publishes([ $this->resolvePath('seedsPath', compact('dirName')) => $this->resolvePath('seedsDestinationPath') ], 'database');

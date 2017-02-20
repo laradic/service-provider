@@ -304,7 +304,7 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
         if(isset($this->getVariables[$name])){
             $var = $this->getVariables[$name];
             if($var instanceof Closure){
-                return $var->call($this);
+                return $var($this);
             }
         }
     }

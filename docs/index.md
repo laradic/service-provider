@@ -3,37 +3,97 @@ title: Overview
 subtitle: Laradic Console
 -->
 
-# Overview
 
-This package extends the default Laravel Console and adds several new features.
+The service provider can be extended and will provide a high level of abstraction.
+All properties and methods have docblock documentation explaining how and what for its used.
 
-There are 2 ways of using this package.
-
-#### Command only
-Command only means you only use the `Laradic\Console\Command` class, which is an
-extension of `Illuminate\Console\Command` with several improvements and additional features.
-It is possible to use this class to extend your own Commands from without needing to register
-the service provider or extend the Kernel.
-
-Go to the [Command](command.md) documentation
-
-
-#### Full features
-Beside using the `Laradic\Console\Command` for your commands, to enable full features
- it is required to extend your Console Kernel from the `Laradic\Console\Kernel` and
- register the `Laradic\Console\ConsoleServiceProvider`.
-
-In most cases this means editing the **app/Console/Kernel.php**:
-
-```php
-namespace App\Console;
-use Illuminate\Console\Scheduling\Schedule;
-// change
-use Illuminate\Foundation\Console\Kernel as ConsoleKernel;3
-// to
-use Laradic\Console\Kernel as ConsoleKernel;
-
-class Kernel extends ConsoleKernel {}
+### Basic Example
+Lets say, our package file structure looks like this:
+```
+- laradic
+  - example-package
+    - resources
+      - views
+        - layout.blade.php
+        - page1.blade.php
+      - assets
+        - jquery.min.js
+        - example-package.js
+      - lang
+        - en
+    - database
+      - migrations
+      - seeds
+    - config
+      - example-package.php
+    - src
+      - ExamplePackageServiceProvider.php
+    - tests
+    - composer.json
+    - phpunit.xml
 ```
 
-And registering the `Laradic\Console\ConsoleServiceProvider` inside **config/app.php**
+```php
+use Laradic\ServiceProvider\ServiceProvider;
+
+class MyServiceProvider extends ServiceProvider {
+
+    # uses $configPath to create the path and suffixes the my.package with .php
+    protected $configFiles = [ 'example-package' ];
+    
+    # assigns the 'view' directory inside resources to namespace 'example-packages'.
+    # that results in: view('example-packages::page1')
+    # And using vendor:publish, this will be published to  
+    protected $viewDirs = ['views' => 'example-package'];
+
+
+    public function boot(){
+        # When overriding the boot method, make sure to call the super method.
+        # returns the Application instance
+        $app = parent::boot();
+    }
+
+    public function register(){
+        # When overriding the register method, make sure to call the super method.
+        # returns the Application instance
+        $app = parent::register();
+
+    }
+}
+```
+
+
+<!--*codex:layout:row*-->
+<!--*codex:layout:column('sm', '4')*-->
+<!--*codex:phpdoc:list:property('Laradic\\ServiceProvider\\Plugins\\Resources', '', '$viewDirs, $assetDirs, $configFiles, $translationDirs, $migrationDirs, $seedDirs')*-->
+<!--*codex:/layout:column*-->
+<!--*codex:layout:column('sm', '4')*-->
+<!--*codex:/layout:column*-->
+<!--*codex:layout:column('sm', '4')*-->
+<!--*codex:/layout:column*-->
+<!--*codex:/layout:row*-->
+
+
+```php
+use Laradic\ServiceProvider\ServiceProvider;
+
+class MyServiceProvider extends ServiceProvider {
+
+    # uses the $dir and $configPath to create the path and suffixes the my.package with .php
+    protected $configFiles = [ 'my.package' ];
+
+
+    public function boot(){
+        # When overriding the boot method, make sure to call the super method.
+        # returns the Application instance
+        $app = parent::boot();
+    }
+
+    public function register(){
+        # When overriding the register method, make sure to call the super method.
+        # returns the Application instance
+        $app = parent::register();
+
+    }
+}
+```

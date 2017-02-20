@@ -62,9 +62,11 @@ trait Config
         if ( !is_array($configFiles) ) {
             $configFiles = [ $configFiles ];
         }
+        if($path === null){
+            $path = $this->resolvePath('configPath');
+        }
         if ( null !== $this->getRootDir() && null !== $configFiles ) {
             foreach ( $configFiles as $fileName ) {
-                $path = $path !== null ?: $this->resolvePath('configPath');
                 $filePath = path_join($path, $fileName) . '.php';
                 $this->publishes([ $filePath => config_path($fileName . '.php') ], 'config');
             }
