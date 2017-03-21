@@ -1,10 +1,20 @@
 <?php
+/**
+ * Part of the Laradic PHP Packages.
+ *
+ * Copyright (c) 2017. Robin Radic.
+ *
+ * The license can be found in the package and online at https://laradic.mit-license.org.
+ *
+ * @copyright Copyright 2017 (c) Robin Radic
+ * @license https://laradic.mit-license.org The MIT License
+ */
+
 namespace Laradic\ServiceProvider;
 
 /**
  * This is the class ServiceProvider.
  *
- * @package        Laradic\ServiceProvider
  * @author         CLI
  * @copyright      Copyright (c) 2015, CLI. All rights reserved
  *
@@ -12,8 +22,7 @@ namespace Laradic\ServiceProvider;
  */
 abstract class ServiceProvider extends BaseServiceProvider
 {
-    use
-        Plugins\Bindings,
+    use Plugins\Bindings,
         Plugins\Commands,
         Plugins\Config,
         Plugins\Events,

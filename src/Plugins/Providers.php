@@ -1,6 +1,16 @@
 <?php
-namespace Laradic\ServiceProvider\Plugins;
+/**
+ * Part of the Laradic PHP Packages.
+ *
+ * Copyright (c) 2017. Robin Radic.
+ *
+ * The license can be found in the package and online at https://laradic.mit-license.org.
+ *
+ * @copyright Copyright 2017 (c) Robin Radic
+ * @license https://laradic.mit-license.org The MIT License
+ */
 
+namespace Laradic\ServiceProvider\Plugins;
 
 /**
  * This is the class Providers.
@@ -8,28 +18,27 @@ namespace Laradic\ServiceProvider\Plugins;
  * @property-read \Illuminate\Foundation\Application $app
  * @mixin \Laradic\ServiceProvider\BaseServiceProvider
  *
- * @package        Laradic\ServiceProvider
  * @author         CLI
  * @copyright      Copyright (c) 2015, CLI. All rights reserved
  */
-trait  Providers
+trait Providers
 {
     /**
      * These Service Providers will be registered. Basicaly providing a shortcut to app()->register(). Use FQN.
      *
      * @var array
      */
-    protected $providers = [ ];
+    protected $providers = [];
 
     /**
      * These Service Providers will be registered as deferred. Basicaly providing a shortcut to app()->registerDeferredProvider(). Use FQN.
      *
      * @var array
      */
-    protected $deferredProviders = [ ];
+    protected $deferredProviders = [];
 
     /**
-     * Define the point where the $providers and $deferredProviders should be registered. accepts one of ON_REGISTER | ON_REGISTERED | ON_BOOT | ON_BOOTED
+     * Define the point where the $providers and $deferredProviders should be registered. accepts one of ON_REGISTER | ON_REGISTERED | ON_BOOT | ON_BOOTED.
      *
      * @var int
      */
@@ -41,15 +50,14 @@ trait  Providers
     /** @var int */
     protected $providersPluginPriority = 10;
 
-
     /**
-     * startProvidersPlugin method
+     * startProvidersPlugin method.
      *
      * @param \Illuminate\Foundation\Application $app
      */
     protected function startProvidersPlugin($app)
     {
-        switch ( $this->registerProvidersOn ) {
+        switch ($this->registerProvidersOn) {
             case 'register':
                 $this->onRegister('providers', function () {
                     $this->handleProviders();
@@ -77,18 +85,18 @@ trait  Providers
     }
 
     /**
-     * handleProviders method
+     * handleProviders method.
      */
     protected function handleProviders()
     {
         // register deferred providers
-        foreach ( $this->deferredProviders as $provider ) {
+        foreach ($this->deferredProviders as $provider) {
             $this->app->registerDeferredProvider($provider);
         }
 
-        if ( $this->registerProvidersMethod === 'register' ) {
+        if ($this->registerProvidersMethod === 'register') {
             $this->registerProviders();
-        } elseif ( $this->registerProvidersMethod === 'resolve' ) {
+        } elseif ($this->registerProvidersMethod === 'resolve') {
             $this->resolveProviders();
         } else {
             throw new \LogicException('registerProvidersMethod not valid');
@@ -96,31 +104,31 @@ trait  Providers
     }
 
     /**
-     * registerProviders method
+     * registerProviders method.
      */
     protected function registerProviders()
     {
-        foreach ( $this->providers as $provider ) {
+        foreach ($this->providers as $provider) {
             $this->app->register($provider);
         }
     }
 
     /**
-     * resolveProviders method
+     * resolveProviders method.
      */
     protected function resolveProviders()
     {
-        foreach ( $this->providers as $provider ) {
+        foreach ($this->providers as $provider) {
             $resolved = $this->resolveProvider($registered[] = $provider);
             $resolved->register();
-            if ( $this->registerProvidersOn === 'boot' ) {
-                $this->app->call([ $provider, 'boot' ]);
+            if ($this->registerProvidersOn === 'boot') {
+                $this->app->call([$provider, 'boot']);
             }
         }
     }
 
     /**
-     * resolveProvider method
+     * resolveProvider method.
      *
      * @param $provider
      *
@@ -130,5 +138,4 @@ trait  Providers
     {
         return $this->app->resolveProviderClass($registered[] = $provider);
     }
-
 }

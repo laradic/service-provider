@@ -12,7 +12,6 @@
 
 namespace Laradic\ServiceProvider\Plugins;
 
-use Laradic\ServiceProvider\BaseServiceProvider;
 use Laradic\Support\Str;
 use Laradic\Support\Util;
 use ReflectionClass;
@@ -23,17 +22,16 @@ use ReflectionClass;
  * @property-read \Illuminate\Foundation\Application $app
  * @mixin \Laradic\ServiceProvider\BaseServiceProvider
  *
- * @package        Laradic\ServiceProvider
  * @author         CLI
  * @copyright      Copyright (c) 2015, CLI. All rights reserved
  */
 trait Commands
 {
-
     /**
      * Collection of commands.
      *
      * @var array
+     *
      * @example
      * <?php
      * $new = new ServiceProvider;
@@ -41,25 +39,29 @@ trait Commands
     protected $commands = [];
 
     /**
-     * Commands that are found are bound in the container using this string as prefix
+     * Commands that are found are bound in the container using this string as prefix.
+     *
      * @var string
      */
     protected $commandPrefix = 'command.';
 
     /**
-     * Collection of paths to search for commands
+     * Collection of paths to search for commands.
+     *
      * @var array
      */
     protected $findCommands = [];
 
     /**
-     * If true, the $findCommands path will be searched recursively (all subdirectories will be scanned) for commands
+     * If true, the $findCommands path will be searched recursively (all subdirectories will be scanned) for commands.
+     *
      * @var bool
      */
     protected $findCommandsRecursive = false;
 
     /**
-     *  Commands should extend
+     *  Commands should extend.
+     *
      * @var string
      */
     protected $findCommandsExtending = 'Symfony\Component\Console\Command\Command';
@@ -67,32 +69,31 @@ trait Commands
     protected $commandsPluginPriority = 50;
 
     /**
-     * startCommandsPlugin method
+     * startCommandsPlugin method.
      *
      * @param \Illuminate\Foundation\Application $app
      */
     protected function startCommandsPlugin($app)
     {
-
         $this->onRegister('commands', function ($app) {
             /** @var \Illuminate\Foundation\Application $app */
             // Commands
-            if ( $app->runningInConsole() ) {
-                foreach ( $this->findCommands as $path ) {
-                    $dir     = path_get_directory((new ReflectionClass(get_called_class()))->getFileName());
+            if ($app->runningInConsole()) {
+                foreach ($this->findCommands as $path) {
+                    $dir = path_get_directory((new ReflectionClass(get_called_class()))->getFileName());
                     $classes = $this->findCommandsIn(path_join($dir, $path), $this->findCommandsRecursive);
 
                     $this->commands = array_merge($this->commands, $classes);
                 }
-                if ( is_array($this->commands) && count($this->commands) > 0 ) {
+                if (is_array($this->commands) && count($this->commands) > 0) {
                     $commands = [];
-                    foreach ( $this->commands as $k => $v ) {
-                        if ( is_string($k) ) {
-                            $app[ $this->commandPrefix . $k ] = $app->share(function ($app) use ($k, $v) {
+                    foreach ($this->commands as $k => $v) {
+                        if (is_string($k)) {
+                            $app[ $this->commandPrefix.$k ] = $app->share(function ($app) use ($k, $v) {
                                 return $app->build($v);
                             });
 
-                            $commands[] = $this->commandPrefix . $k;
+                            $commands[] = $this->commandPrefix.$k;
                         } else {
                             $commands[] = $v;
                         }
@@ -103,9 +104,8 @@ trait Commands
         });
     }
 
-
     /**
-     * findCommandsIn method
+     * findCommandsIn method.
      *
      * @param      $path
      * @param bool $recursive
@@ -114,36 +114,36 @@ trait Commands
      */
     protected function findCommandsIn($path, $recursive = false)
     {
-
         $classes = [];
-        foreach ( $this->findCommandsFiles($path) as $filePath ) {
+        foreach ($this->findCommandsFiles($path) as $filePath) {
 
             //$class = $classFinder->findClass($filePath);
 
             $class = Util::getClassNameFromFile($filePath);
-            if ( $class !== null ) {
+            if ($class !== null) {
                 $namespace = Util::getNamespaceFromFile($filePath);
-                if ( $namespace !== null ) {
+                if ($namespace !== null) {
                     $class = "$namespace\\$class";
                 }
-                $class   = Str::removeLeft($class, '\\');
+                $class = Str::removeLeft($class, '\\');
                 $parents = class_parents($class);
 
-                if ( $this->findCommandsExtending !== null && in_array($this->findCommandsExtending, $parents, true) === false ) {
+                if ($this->findCommandsExtending !== null && in_array($this->findCommandsExtending, $parents, true) === false) {
                     continue;
                 }
                 $ref = new \ReflectionClass($class);
-                if ( $ref->isAbstract() ) {
+                if ($ref->isAbstract()) {
                     continue;
                 }
                 $classes[] = Str::removeLeft($class, '\\');
             }
         }
+
         return $classes;
     }
 
     /**
-     * findCommandsFiles method
+     * findCommandsFiles method.
      *
      * @param $directory
      *
@@ -151,9 +151,9 @@ trait Commands
      */
     protected function findCommandsFiles($directory)
     {
-        $glob = glob($directory . '/*');
+        $glob = glob($directory.'/*');
 
-        if ( $glob === false ) {
+        if ($glob === false) {
             return [];
         }
 

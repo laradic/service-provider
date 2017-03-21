@@ -1,6 +1,6 @@
 <!--
 title: Overview
-subtitle: Laradic Console
+subtitle: Laradic Service Provider
 -->
 
 
@@ -9,7 +9,7 @@ All properties and methods have docblock documentation explaining how and what f
 
 ### Basic Example
 Lets say, our package file structure looks like this:
-```
+```text
 - laradic
   - example-package
     - resources
@@ -21,6 +21,7 @@ Lets say, our package file structure looks like this:
         - example-package.js
       - lang
         - en
+          - general.php
     - database
       - migrations
       - seeds
@@ -33,6 +34,13 @@ Lets say, our package file structure looks like this:
     - phpunit.xml
 ```
 
+
+<!--*codex:layout:row*-->
+<!--*codex:layout:column('sm', '4')*-->
+<!--*codex:phpdoc:list:property('Laradic\\ServiceProvider\\Plugins\\Resources', '', '$configFiles, $viewDirs, $assetDirs, $translationDirs, $migrationDirs, $seedDirs')*-->
+<!--*codex:/layout:column*-->
+<!--*codex:layout:column('sm', '8')*-->
+
 ```php
 use Laradic\ServiceProvider\ServiceProvider;
 
@@ -41,35 +49,27 @@ class MyServiceProvider extends ServiceProvider {
     # uses $configPath to create the path and suffixes the my.package with .php
     protected $configFiles = [ 'example-package' ];
     
-    # assigns the 'view' directory inside resources to namespace 'example-packages'.
-    # that results in: view('example-packages::page1')
-    # And using vendor:publish, this will be published to  
+    // assigns the 'view' directory inside resources to namespace 'example-packages'.
+    // that results in: view('example-packages::page1')
+    // And using vendor:publish, this will be published to  
     protected $viewDirs = ['views' => 'example-package'];
+    
+    // assigns the 'assets' directory inside resources to vendor name 'example-package'.
+    // that results in: asset('vendor/example-package/example-package.js')
+    // And using vendor:publish, this will be published to 'public/vendor/example-package'
+    protected $assetDirs = ['assets' => 'example-package'];
 
-
-    public function boot(){
-        # When overriding the boot method, make sure to call the super method.
-        # returns the Application instance
-        $app = parent::boot();
-    }
-
-    public function register(){
-        # When overriding the register method, make sure to call the super method.
-        # returns the Application instance
-        $app = parent::register();
-
-    }
+    // lang('example-package::general.title')
+    protected $translationDirs = ['lang' => 'example-package'];
+    
+    // Array of directory names/paths relative to $databasePath containing migration files.
+    protected $migrationDirs = ['migrations'];
+    
+    // Array of directory names/paths relative to $databasePath containing seed files.
+    protected $seedDirs = ['seeds'];
 }
 ```
 
-
-<!--*codex:layout:row*-->
-<!--*codex:layout:column('sm', '4')*-->
-<!--*codex:phpdoc:list:property('Laradic\\ServiceProvider\\Plugins\\Resources', '', '$viewDirs, $assetDirs, $configFiles, $translationDirs, $migrationDirs, $seedDirs')*-->
-<!--*codex:/layout:column*-->
-<!--*codex:layout:column('sm', '4')*-->
-<!--*codex:/layout:column*-->
-<!--*codex:layout:column('sm', '4')*-->
 <!--*codex:/layout:column*-->
 <!--*codex:/layout:row*-->
 

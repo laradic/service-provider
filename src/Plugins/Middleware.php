@@ -1,8 +1,13 @@
 <?php
 /**
- * Part of the CLI PHP packages.
+ * Part of the Laradic PHP Packages.
  *
- * License and copyright information bundled with this package in the LICENSE file
+ * Copyright (c) 2017. Robin Radic.
+ *
+ * The license can be found in the package and online at https://laradic.mit-license.org.
+ *
+ * @copyright Copyright 2017 (c) Robin Radic
+ * @license https://laradic.mit-license.org The MIT License
  */
 
 namespace Laradic\ServiceProvider\Plugins;
@@ -13,7 +18,6 @@ use Laradic\ServiceProvider\BaseServiceProvider;
 /**
  * This is the class Middleware.
  *
- * @package        Laradic\ServiceProvider
  * @author         CLI
  * @copyright      Copyright (c) 2015, CLI. All rights reserved
  * @mixin BaseServiceProvider
@@ -25,45 +29,45 @@ trait Middleware
      *
      * @var array
      */
-    protected $middleware = [ ];
+    protected $middleware = [];
 
     /**
      * Collection of prepend middleware.
      *
      * @var array
      */
-    protected $prependMiddleware = [ ];
+    protected $prependMiddleware = [];
 
     /**
      * Collection of route middleware.
      *
      * @var array
      */
-    protected $routeMiddleware = [ ];
+    protected $routeMiddleware = [];
 
     protected $middlewarePluginPriority = 30;
 
     /**
-     * startMiddlewarePlugin method
+     * startMiddlewarePlugin method.
      *
      * @param Application $app
      */
     protected function startMiddlewarePlugin($app)
     {
-        $this->onRegister('middleware', function ($app) {
-            if ( !$app->runningInConsole() ) {
+        $this->onRegister('middleware', function (Application $app) {
+            if (PHP_SAPI !== 'cli') {
                 $router = $app->make('router');
                 $kernel = $app->make('Illuminate\Contracts\Http\Kernel');
 
-                foreach ( $this->prependMiddleware as $middleware ) {
+                foreach ($this->prependMiddleware as $middleware) {
                     $kernel->prependMiddleware($middleware);
                 }
 
-                foreach ( $this->middleware as $middleware ) {
+                foreach ($this->middleware as $middleware) {
                     $kernel->pushMiddleware($middleware);
                 }
 
-                foreach ( $this->routeMiddleware as $key => $middleware ) {
+                foreach ($this->routeMiddleware as $key => $middleware) {
                     $router->middleware($key, $middleware);
                 }
             }
@@ -71,7 +75,7 @@ trait Middleware
     }
 
     /**
-     * Push a Middleware on to the stack
+     * Push a Middleware on to the stack.
      *
      * @param $middleware
      *
@@ -79,14 +83,15 @@ trait Middleware
      */
     protected function pushMiddleware($middleware, $force = false)
     {
-        if ( $this->app->runningInConsole() && $force === false ) {
+        if (PHP_SAPI !== 'cli' && $force === false) {
             return $this->getHttpKernel();
         }
+
         return $this->getHttpKernel()->pushMiddleware($middleware);
     }
 
     /**
-     * getHttpKernel method
+     * getHttpKernel method.
      *
      * @return \App\Http\Kernel|\Illuminate\Contracts\Http\Kernel
      */
@@ -96,7 +101,7 @@ trait Middleware
     }
 
     /**
-     * getRouter method
+     * getRouter method.
      *
      * @return \Illuminate\Contracts\Routing\Registrar|\Illuminate\Routing\Router
      */
@@ -106,7 +111,7 @@ trait Middleware
     }
 
     /**
-     * Prepend a Middleware in the stack
+     * Prepend a Middleware in the stack.
      *
      * @param $middleware
      *
@@ -114,7 +119,7 @@ trait Middleware
      */
     protected function prependMiddleware($middleware, $force = false)
     {
-        if ( $this->app->runningInConsole() && $force === false ) {
+        if (PHP_SAPI !== 'cli' && $force === false) {
             $this->getHttpKernel();
         }
 
@@ -126,21 +131,20 @@ trait Middleware
      *
      * @param      $key
      * @param null $middleware
-     *
      * @param bool $force
      *
      * @return \Illuminate\Contracts\Routing\Registrar|\Illuminate\Routing\Router
      */
     protected function routeMiddleware($key, $middleware = null, $force = false)
     {
-
-        if ( $this->app->runningInConsole() && $force === false ) {
+        if ($this->app->runningInConsole() && $force === false) {
             return $this->getRouter();
         }
-        if ( is_array($key) ) {
-            foreach ( $key as $k => $m ) {
+        if (is_array($key)) {
+            foreach ($key as $k => $m) {
                 $this->routeMiddleware($k, $m);
             }
+
             return $this->getRouter();
         } else {
             $this->getRouter()->middleware($key, $middleware);

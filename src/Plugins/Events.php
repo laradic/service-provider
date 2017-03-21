@@ -1,4 +1,15 @@
 <?php
+/**
+ * Part of the Laradic PHP Packages.
+ *
+ * Copyright (c) 2017. Robin Radic.
+ *
+ * The license can be found in the package and online at https://laradic.mit-license.org.
+ *
+ * @copyright Copyright 2017 (c) Robin Radic
+ * @license https://laradic.mit-license.org The MIT License
+ */
+
 namespace Laradic\ServiceProvider\Plugins;
 
 /**
@@ -7,7 +18,6 @@ namespace Laradic\ServiceProvider\Plugins;
  * @property-read \Illuminate\Foundation\Application $app
  * @mixin \Laradic\ServiceProvider\BaseServiceProvider
  *
- * @package        Laradic\ServiceProvider
  * @author         CLI
  * @copyright      Copyright (c) 2015, CLI. All rights reserved
  */
@@ -20,17 +30,17 @@ trait Events
      *
      * @var array
      */
-    protected $listen = [ ];
+    protected $listen = [];
 
     /**
      * The subscriber classes to register.
      *
      * @var array
      */
-    protected $subscribe = [ ];
+    protected $subscribe = [];
 
     /**
-     * startEventsPlugin method
+     * startEventsPlugin method.
      *
      * @param \Illuminate\Foundation\Application $app
      */
@@ -39,21 +49,20 @@ trait Events
         $this->onBoot('events', function ($app) {
             $events = $this->app->make('events');
 
-            foreach ( $this->listens() as $event => $listeners ) {
-                foreach ( $listeners as $listener ) {
+            foreach ($this->listens() as $event => $listeners) {
+                foreach ($listeners as $listener) {
                     $events->listen($event, $listener);
                 }
             }
 
-            foreach ( $this->subscribe as $subscriber ) {
+            foreach ($this->subscribe as $subscriber) {
                 $events->subscribe($subscriber);
             }
         });
     }
 
-
     /**
-     * on method
+     * on method.
      *
      * @param $events
      * @param $handler
@@ -63,7 +72,6 @@ trait Events
         $dispatcher = $this->app->make('events');
         $dispatcher->listen($events, $handler);
     }
-
 
     /**
      * Get the events and handlers.

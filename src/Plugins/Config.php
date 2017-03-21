@@ -20,24 +20,23 @@ use Illuminate\Contracts\Foundation\Application;
  * @property-read \Illuminate\Foundation\Application $app
  * @mixin \Laradic\ServiceProvider\BaseServiceProvider
  *
- * @package        Laradic\ServiceProvider
  * @author         CLI
  * @copyright      Copyright (c) 2015, CLI. All rights reserved
  */
 trait Config
 {
-    protected $configPluginPriority = [ 20, 10 ];
+    protected $configPluginPriority = [20, 10];
 
     protected $configStrategy = 'defaultConfigStrategy';
 
     /**
-     * bootConfigPlugin method
+     * bootConfigPlugin method.
      *
      * @param Application $app
      */
     protected function startConfigPlugin($app)
     {
-        $this->getVariables['config'] = function(){
+        $this->getVariables['config'] = function () {
             return $this->app->make('config');
         };
 
@@ -52,61 +51,61 @@ trait Config
 
     /**
      * Adds the config files defined in $configFiles to the publish procedure.
-     * Can be overriden to adjust default functionality
+     * Can be overriden to adjust default functionality.
      */
     protected function bootConfigFiles($configFiles = null, $path = null)
     {
-        if ( $configFiles === null ) {
+        if ($configFiles === null) {
             $configFiles = $this->configFiles;
         }
-        if ( !is_array($configFiles) ) {
-            $configFiles = [ $configFiles ];
+        if (!is_array($configFiles)) {
+            $configFiles = [$configFiles];
         }
-        if($path === null){
+        if ($path === null) {
             $path = $this->resolvePath('configPath');
         }
-        if ( null !== $this->getRootDir() && null !== $configFiles ) {
-            foreach ( $configFiles as $fileName ) {
-                $filePath = path_join($path, $fileName) . '.php';
-                $this->publishes([ $filePath => config_path($fileName . '.php') ], 'config');
+        if (null !== $this->getRootDir() && null !== $configFiles) {
+            foreach ($configFiles as $fileName) {
+                $filePath = path_join($path, $fileName).'.php';
+                $this->publishes([$filePath => config_path($fileName.'.php')], 'config');
             }
         }
     }
 
     /**
-     * The default config merge function, instead of using the laravel mergeConfigRom it
+     * The default config merge function, instead of using the laravel mergeConfigRom it.
      *
      * @param $path
      * @param $key
      */
     protected function defaultConfigStrategy($path, $key)
     {
-        $config = $this->app->make('config')->get($key, [ ]);
+        $config = $this->app->make('config')->get($key, []);
         $this->app->make('config')->set($key, array_replace_recursive(require $path, $config));
     }
 
     /**
      * Merges all defined config files defined in $configFiles.
-     * Can be overriden to adjust default functionality
+     * Can be overriden to adjust default functionality.
      */
     protected function registerConfigFiles($configFiles = null, $path = null)
     {
-        if ( $configFiles === null ) {
+        if ($configFiles === null) {
             $configFiles = $this->configFiles;
         }
-        if ( !is_array($configFiles) ) {
-            $configFiles = [ $configFiles ];
+        if (!is_array($configFiles)) {
+            $configFiles = [$configFiles];
         }
-        if ( null !== $this->getRootDir() && null !== $configFiles ) {
+        if (null !== $this->getRootDir() && null !== $configFiles) {
             $path = $path ?: $this->resolvePath('configPath');
-            foreach ( $configFiles as $key ) {
-                call_user_func_array([ $this, $this->configStrategy ], [ path_join($path, $key . '.php'), $key ]);
+            foreach ($configFiles as $key) {
+                call_user_func_array([$this, $this->configStrategy], [path_join($path, $key.'.php'), $key]);
             }
         }
     }
 
     /**
-     * overrideConfig method
+     * overrideConfig method.
      *
      * @param        $fileName
      * @param string $method
@@ -116,17 +115,16 @@ trait Config
     protected function overrideConfig($fileName, $method = 'array_replace_recursive')
     {
         /** @var \Illuminate\Config\Repository $config */
-        $config    = $this->app->make('config');
-        $fileName  = str_ensure_right($fileName, '.php');
-        $filePath  = path_join($this->resolvePath('configPath'), $fileName);
+        $config = $this->app->make('config');
+        $fileName = str_ensure_right($fileName, '.php');
+        $filePath = path_join($this->resolvePath('configPath'), $fileName);
         $overrides = $this->app[ 'fs' ]->getRequire($filePath);
 
-        foreach ( $overrides as $k => $v ) {
-            if ( $config->has($k) && is_array($this->app[ 'config' ]->get($k)) ) {
-                $v = call_user_func($method, $config->get($k, [ ]), $v);
+        foreach ($overrides as $k => $v) {
+            if ($config->has($k) && is_array($this->app[ 'config' ]->get($k))) {
+                $v = call_user_func($method, $config->get($k, []), $v);
             }
             $config->set($k, $v);
         }
     }
-
 }
