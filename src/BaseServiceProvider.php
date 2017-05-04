@@ -16,7 +16,7 @@ use Closure;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
-use Laradic\Filesystem\Filesystem;
+use Illuminate\Filesystem\Filesystem;
 use Laradic\ServiceProvider\Exception\ProviderPluginDependencyException;
 use ReflectionClass;
 
@@ -94,7 +94,7 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
     {
         parent::__construct($app);
         $this->startIfNotStarted();
-        $this->fs = Filesystem::create();
+        $this->fs = new Filesystem();
     }
 
     /**
