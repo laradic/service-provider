@@ -6,7 +6,7 @@ use Laradic\ServiceProvider\Plugins\Bindings;
 use Laradic\ServiceProvider\Plugins\Commands;
 use Laradic\ServiceProvider\Plugins\Config;
 use Laradic\ServiceProvider\Plugins\Events;
-use Laradic\ServiceProvider\Plugins\Middleware;
+use Laradic\ServiceProvider\Plugins\Routing;
 use Laradic\ServiceProvider\Plugins\Paths;
 use Laradic\ServiceProvider\Plugins\Resources;
 use Laradic\ServiceProvider\Plugins\Providers;
@@ -18,7 +18,7 @@ abstract class ServiceProvider extends BaseServiceProvider
         Config,
         Events,
         Paths,
-        Middleware,
+        Routing,
         Resources,
         Providers;
 

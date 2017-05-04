@@ -28,7 +28,7 @@ abstract class ServiceProvider extends BaseServiceProvider
         Plugins\Events,
         Plugins\Facades,
         Plugins\Helpers,
-        Plugins\Middleware,
+        Plugins\Routing,
         Plugins\Paths,
         Plugins\Providers,
         Plugins\Resources;

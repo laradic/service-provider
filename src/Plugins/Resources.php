@@ -7,7 +7,7 @@
  * The license can be found in the package and online at https://laradic.mit-license.org.
  *
  * @copyright Copyright 2017 (c) Robin Radic
- * @license https://laradic.mit-license.org The MIT License
+ * @license   https://laradic.mit-license.org The MIT License
  */
 
 namespace Laradic\ServiceProvider\Plugins;
@@ -81,7 +81,7 @@ trait Resources
      *
      * @var array
      */
-    protected $viewDirs = [/* 'dirName' => 'namespace' */];
+    protected $viewDirs = [/* 'dirName' => 'namespace' */ ];
 
     /*
      |---------------------------------------------------------------------
@@ -110,7 +110,7 @@ trait Resources
      *
      * @var array
      */
-    protected $assetDirs = [/* 'dirName' => 'namespace' */];
+    protected $assetDirs = [/* 'dirName' => 'namespace' */ ];
 
     /*
      |---------------------------------------------------------------------
@@ -150,7 +150,7 @@ trait Resources
     protected $translationPath = '{resourcesPath}/{dirName}';
 
     /** @var array */
-    protected $translationDirs = [/* 'dirName' => 'namespace', */];
+    protected $translationDirs = [/* 'dirName' => 'namespace', */ ];
 
     public function _test()
     {
@@ -187,7 +187,7 @@ trait Resources
      *
      * @var array
      */
-    protected $migrationDirs = [/* 'dirName', */];
+    protected $migrationDirs = [/* 'dirName', */ ];
 
     /**
      * Migrations will be loaded automaticly. If you want to publish the migrations, this should be true.
@@ -211,7 +211,11 @@ trait Resources
      *
      * @var array
      */
-    protected $seedDirs = [/* 'dirName', */];
+    protected $seedDirs = [/* 'dirName', */ ];
+
+    protected $routesPath = '{packagePath}/routes';
+
+    protected $routeFiles = [];
 
     /**
      * startPathsPlugin method.
@@ -225,28 +229,35 @@ trait Resources
             foreach ($this->viewDirs as $dirName => $namespace) {
                 $viewPath = $this->resolvePath('viewsPath', compact('dirName'));
                 $this->loadViewsFrom($viewPath, $namespace);
-                $this->publishes([$viewPath => $this->resolvePath('viewsDestinationPath', compact('namespace'))], 'views');
+                $this->publishes([ $viewPath => $this->resolvePath('viewsDestinationPath', compact('namespace')) ], 'views');
             }
 
             foreach ($this->translationDirs as $dirName => $namespace) {
                 $transPath = $this->resolvePath('translationPath', compact('dirName'));
                 $this->loadTranslationsFrom($transPath, $namespace);
-                $this->publishes([$transPath => $this->resolvePath('translationDestinationPath', compact('namespace'))], 'translations');
+                $this->publishes([ $transPath => $this->resolvePath('translationDestinationPath', compact('namespace')) ], 'translations');
             }
 
             foreach ($this->assetDirs as $dirName => $namespace) {
-                $this->publishes([$this->resolvePath('assetsPath', compact('dirName')) => $this->resolvePath('assetsDestinationPath', compact('namespace'))], 'public');
+                $this->publishes([
+                    $this->resolvePath('assetsPath', compact('dirName')) => $this->resolvePath('assetsDestinationPath', compact('namespace')),
+                ], 'public');
             }
 
             foreach ($this->migrationDirs as $dirName) {
                 $migrationPaths = $this->resolvePath('migrationsPath', compact('dirName'));
                 $this->loadMigrationsFrom($migrationPaths);
                 if ($this->publishMigrations) {
-                    $this->publishes([$migrationPaths => $this->resolvePath('migrationDestinationPath')], 'database');
+                    $this->publishes([ $migrationPaths => $this->resolvePath('migrationDestinationPath') ], 'database');
                 }
             }
+
             foreach ($this->seedDirs as $dirName) {
-                $this->publishes([$this->resolvePath('seedsPath', compact('dirName')) => $this->resolvePath('seedsDestinationPath')], 'database');
+                $this->publishes([ $this->resolvePath('seedsPath', compact('dirName')) => $this->resolvePath('seedsDestinationPath') ], 'database');
+            }
+
+            foreach ($this->routeFiles as $routeFile) {
+                $this->loadRoutesFrom(path_join($this->resolvePath('routesPath'), str_ensure_right($routeFile, '.php')));
             }
         });
     }

@@ -7,7 +7,7 @@
  * The license can be found in the package and online at https://laradic.mit-license.org.
  *
  * @copyright Copyright 2017 (c) Robin Radic
- * @license https://laradic.mit-license.org The MIT License
+ * @license   https://laradic.mit-license.org The MIT License
  */
 
 namespace Laradic\ServiceProvider\Plugins;
@@ -22,7 +22,7 @@ use Laradic\ServiceProvider\BaseServiceProvider;
  * @copyright      Copyright (c) 2015, CLI. All rights reserved
  * @mixin BaseServiceProvider
  */
-trait Middleware
+trait Routing
 {
     /**
      * Collection of middleware.
@@ -52,9 +52,10 @@ trait Middleware
      *
      * @param Application $app
      */
-    protected function startMiddlewarePlugin($app)
+    protected function startRoutingPlugin($app)
     {
-        $this->onRegister('middleware', function (Application $app) {
+        $this->requiresPlugins(Paths::class);
+        $this->onRegister('routing', function (Application $app) {
             if (PHP_SAPI !== 'cli') {
                 $router = $app->make('router');
                 $kernel = $app->make('Illuminate\Contracts\Http\Kernel');
@@ -72,14 +73,20 @@ trait Middleware
                 }
             }
         });
+
+        $this->onBoot('routing', function (Application $app) {
+
+            $this->routes;
+        });
     }
 
     /**
      * Push a Middleware on to the stack.
      *
-     * @param $middleware
+     * @param      $middleware
      *
-     * @return mixed
+     * @param bool $force
+     *
      */
     protected function pushMiddleware($middleware, $force = false)
     {
@@ -87,13 +94,13 @@ trait Middleware
             return $this->getHttpKernel();
         }
 
-        return $this->getHttpKernel()->pushMiddleware($middleware);
+        $this->getHttpKernel()->pushMiddleware($middleware);
     }
 
     /**
      * getHttpKernel method.
      *
-     * @return \App\Http\Kernel|\Illuminate\Contracts\Http\Kernel
+     * @return \Illuminate\Contracts\Http\Kernel|\Illuminate\Foundation\Http\Kernel
      */
     protected function getHttpKernel()
     {
@@ -115,7 +122,6 @@ trait Middleware
      *
      * @param $middleware
      *
-     * @return \Illuminate\Contracts\Routing\Registrar|\Illuminate\Routing\Router
      */
     protected function prependMiddleware($middleware, $force = false)
     {
@@ -123,7 +129,7 @@ trait Middleware
             $this->getHttpKernel();
         }
 
-        return $this->getHttpKernel()->prependMiddleware($middleware);
+        $this->getHttpKernel()->prependMiddleware($middleware);
     }
 
     /**
@@ -137,17 +143,14 @@ trait Middleware
      */
     protected function routeMiddleware($key, $middleware = null, $force = false)
     {
-        if ($this->app->runningInConsole() && $force === false) {
+        if (PHP_SAPI === 'cli' && $force === false) {
             return $this->getRouter();
         }
         if (is_array($key)) {
             foreach ($key as $k => $m) {
                 $this->routeMiddleware($k, $m);
             }
-
-            return $this->getRouter();
-        } else {
-            $this->getRouter()->middleware($key, $middleware);
         }
+        $this->getRouter()->middleware($key, $middleware);
     }
 }
