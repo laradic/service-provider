@@ -7,16 +7,16 @@
  * The license can be found in the package and online at https://laradic.mit-license.org.
  *
  * @copyright Copyright 2017 (c) Robin Radic
- * @license https://laradic.mit-license.org The MIT License
+ * @license   https://laradic.mit-license.org The MIT License
  */
 
 namespace Laradic\ServiceProvider;
 
 use Closure;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
-use Illuminate\Filesystem\Filesystem;
 use Laradic\ServiceProvider\Exception\ProviderPluginDependencyException;
 use ReflectionClass;
 
@@ -42,6 +42,20 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
 
     /** @var array */
     protected $callCallbacks = [];
+
+    /**
+     * Methods names to call on boot.
+     *
+     * @var array
+     */
+    protected $onBoot = [];
+
+    /**
+     * Methods names to call on register.
+     *
+     * @var array
+     */
+    protected $onRegister = [];
 
     // plugins
 
@@ -90,7 +104,7 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
     /**
      * {@inheritdoc}
      */
-    public function __construct(\Illuminate\Contracts\Foundation\Application $app)
+    public function __construct(Application $app)
     {
         parent::__construct($app);
         $this->startIfNotStarted();
@@ -125,19 +139,35 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
 
         if ($this->bootingMethod !== null && method_exists($this, $this->bootingMethod)) {
             $this->app->booting(function (Application $app) {
-                $app->call([$this, $this->bootingMethod]);
+                $app->call([ $this, $this->bootingMethod ]);
             });
         }
 
         if ($this->bootedMethod !== null && method_exists($this, $this->bootedMethod)) {
             $this->app->booted(function (Application $app) {
-                $app->call([$this, $this->bootedMethod]);
+                $app->call([ $this, $this->bootedMethod ]);
             });
         }
 
         $this->fireCallbacks('register', function (Collection $list) {
             return $list->sortBy('priority');
         });
+
+        foreach ($this->onRegister as $method) {
+            $this->onRegister($method, function () use ($method) {
+                if (method_exists($this, $method)) {
+                    $this->$method();
+                }
+            });
+        }
+
+        foreach ($this->onBoot as $method) {
+            $this->onBoot($method, function () use ($method) {
+                if (method_exists($this, $method)) {
+                    $this->$method();
+                }
+            });
+        }
 
         return $app;
     }
@@ -160,8 +190,8 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
     private function startPluginTraits()
     {
         foreach ($this->getPluginTraits() as $trait) {
-            if (method_exists(get_called_class(), $method = 'start'.class_basename($trait).'Plugin')) {
-                call_user_func([$this, $method], $this->app);
+            if (method_exists(get_called_class(), $method = 'start' . class_basename($trait) . 'Plugin')) {
+                call_user_func([ $this, $method ], $this->app);
             }
         }
     }
@@ -181,8 +211,8 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
      */
     public function requiresPlugins()
     {
-        $has = class_uses_recursive(get_called_class());
-        $check = array_combine(func_get_args(), func_get_args());
+        $has     = class_uses_recursive(get_called_class());
+        $check   = array_combine(func_get_args(), func_get_args());
         $missing = array_values(array_diff($check, $has));
         if (isset($missing[ 0 ])) {
             $plugin = collect(debug_backtrace())->where('function', 'requiresPlugins')->first();
@@ -199,10 +229,10 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
             return;
         }
         if ($this->rootDir === null) {
-            $class = new ReflectionClass(get_called_class());
-            $filePath = $class->getFileName();
+            $class     = new ReflectionClass(get_called_class());
+            $filePath  = $class->getFileName();
             $this->dir = $rootDir = path_get_directory($filePath);
-            $found = false;
+            $found     = false;
             for ($i = 0; $i < $this->scanDirsMaxLevel; ++$i) {
                 if (file_exists($composerPath = path_join($rootDir, 'composer.json'))) {
                     $found = true;
@@ -243,7 +273,7 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
     {
         $priority = 10;
         if (property_exists($this, "{$name}PluginPriority")) {
-            $value = $this->{$name.'PluginPriority'};
+            $value    = $this->{$name . 'PluginPriority'};
             $priority = is_array($value) ? $value[ $index ] : $value;
         }
 
@@ -258,7 +288,7 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
      */
     public function onRegister($name, Closure $callback)
     {
-        $priority = $this->getPluginPriority($name);
+        $priority                  = $this->getPluginPriority($name);
         $this->registerCallbacks[] = compact('name', 'priority', 'callback');
     }
 
@@ -270,7 +300,7 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
      */
     public function onBoot($name, Closure $callback)
     {
-        $priority = $this->getPluginPriority($name, 1);
+        $priority              = $this->getPluginPriority($name, 1);
         $this->bootCallbacks[] = compact('name', 'priority', 'callback');
     }
 
@@ -283,9 +313,9 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
      */
     private function fireCallbacks($name, Closure $modifier = null, Closure $caller = null)
     {
-        $list = collect($this->{$name.'Callbacks'});
+        $list = collect($this->{$name . 'Callbacks'});
         if ($modifier) {
-            $list = call_user_func_array($modifier, [$list]);
+            $list = call_user_func_array($modifier, [ $list ]);
         }
         $caller = $caller ?: function (Closure $callback) {
             $callback->bindTo($this);

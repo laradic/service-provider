@@ -29,21 +29,42 @@ trait Routing
      *
      * @var array
      */
-    protected $middleware = [];
+    protected $middleware = [/** [ class ] */ ];
 
     /**
      * Collection of prepend middleware.
      *
      * @var array
      */
-    protected $prependMiddleware = [];
+    protected $prependMiddleware = [/** [ class ] */ ];
 
     /**
      * Collection of route middleware.
      *
      * @var array
      */
-    protected $routeMiddleware = [];
+    protected $routeMiddleware = [/** [ name => class ] */ ];
+
+    /**
+     * Collection of middleware groups.
+     *
+     * @var array
+     */
+    protected $middlewareGroups = [/** [ group => [ middleware ] ] */ ];
+
+    /**
+     * Collection of prepend group middleware.
+     *
+     * @var array
+     */
+    protected $prependGroupMiddleware = [/** [ group => middleware ] */ ];
+
+    /**
+     * Collection of group middleware.
+     *
+     * @var array
+     */
+    protected $groupMiddleware = [/** [ group => middleware ] */ ];
 
     protected $middlewarePluginPriority = 30;
 
@@ -60,16 +81,28 @@ trait Routing
                 $router = $app->make('router');
                 $kernel = $app->make('Illuminate\Contracts\Http\Kernel');
 
-                foreach ($this->prependMiddleware as $middleware) {
-                    $kernel->prependMiddleware($middleware);
+                foreach ($this->prependMiddleware as $class) {
+                    $kernel->prependMiddleware($class);
                 }
 
-                foreach ($this->middleware as $middleware) {
-                    $kernel->pushMiddleware($middleware);
+                foreach ($this->middleware as $class) {
+                    $kernel->pushMiddleware($class);
                 }
 
-                foreach ($this->routeMiddleware as $key => $middleware) {
-                    $router->middleware($key, $middleware);
+                foreach ($this->routeMiddleware as $name => $class) {
+                    $router->middleware($name, $class);
+                }
+
+                foreach ($this->middlewareGroups as $groupName => $classes) {
+                    $router->middlewareGroup($groupName, $classes);
+                }
+
+                foreach ($this->prependGroupMiddleware as $group => $class) {
+                    $router->prependMiddlewareToGroup($group, $class);
+                }
+
+                foreach ($this->groupMiddleware as $group => $class) {
+                    $router->pushMiddlewareToGroup($group, $class);
                 }
             }
         });
