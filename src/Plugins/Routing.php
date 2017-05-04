@@ -77,7 +77,7 @@ trait Routing
     {
         $this->requiresPlugins(Paths::class);
         $this->onRegister('routing', function (Application $app) {
-            if (PHP_SAPI !== 'cli') {
+            if (PHP_SAPI !== 'cli' || $this->app->runningUnitTests()) {
                 $router = $app->make('router');
                 $kernel = $app->make('Illuminate\Contracts\Http\Kernel');
 
@@ -90,7 +90,11 @@ trait Routing
                 }
 
                 foreach ($this->routeMiddleware as $name => $class) {
-                    $router->middleware($name, $class);
+                    if(method_exists($router, 'middleware')) {
+                        $router->middleware($name, $class);
+                    } else {
+                        $router->aliasMiddleware($name, $class);
+                    }
                 }
 
                 foreach ($this->middlewareGroups as $groupName => $classes) {
@@ -123,7 +127,7 @@ trait Routing
      */
     protected function pushMiddleware($middleware, $force = false)
     {
-        if (PHP_SAPI !== 'cli' && $force === false) {
+        if (PHP_SAPI !== 'cli' && $force === false && $this->app->runningUnitTests() === false) {
             return $this->getHttpKernel();
         }
 
@@ -176,7 +180,7 @@ trait Routing
      */
     protected function routeMiddleware($key, $middleware = null, $force = false)
     {
-        if (PHP_SAPI === 'cli' && $force === false) {
+        if (PHP_SAPI === 'cli' && $force === false && $this->app->runningUnitTests() === false) {
             return $this->getRouter();
         }
         if (is_array($key)) {
