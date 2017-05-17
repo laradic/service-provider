@@ -118,11 +118,13 @@ trait Config
         $config = $this->app->make('config');
         $fileName = str_ensure_right($fileName, '.php');
         $filePath = path_join($this->resolvePath('configPath'), $fileName);
-        $overrides = $this->app[ 'fs' ]->getRequire($filePath);
+        $overrides = $this->fs->getRequire($filePath);
 
         foreach ($overrides as $k => $v) {
             if ($config->has($k) && is_array($this->app[ 'config' ]->get($k))) {
-                $v = call_user_func($method, $config->get($k, []), $v);
+                $current = $config->get($k, []);
+                $v = $method($current, $v);
+
             }
             $config->set($k, $v);
         }

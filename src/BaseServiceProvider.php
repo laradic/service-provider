@@ -32,7 +32,7 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
     /** @var array */
     protected $provides = [];
 
-    /** @var \Laradic\Filesystem\Filesystem */
+    /** @var \Illuminate\Filesystem\Filesystem */
     protected $fs;
 
     // magic
