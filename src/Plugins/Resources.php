@@ -7,7 +7,7 @@
  * The license can be found in the package and online at https://laradic.mit-license.org.
  *
  * @copyright Copyright 2017 (c) Robin Radic
- * @license   https://laradic.mit-license.org The MIT License
+ * @license https://laradic.mit-license.org The MIT License
  */
 
 namespace Laradic\ServiceProvider\Plugins;
@@ -213,10 +213,6 @@ trait Resources
      */
     protected $seedDirs = [/* 'dirName', */ ];
 
-    protected $routesPath = '{packagePath}/routes';
-
-    protected $routeFiles = [];
-
     /**
      * startPathsPlugin method.
      *
@@ -254,10 +250,6 @@ trait Resources
 
             foreach ($this->seedDirs as $dirName) {
                 $this->publishes([ $this->resolvePath('seedsPath', compact('dirName')) => $this->resolvePath('seedsDestinationPath') ], 'database');
-            }
-
-            foreach ($this->routeFiles as $routeFile) {
-                $this->loadRoutesFrom(path_join($this->resolvePath('routesPath'), str_ensure_right($routeFile, '.php')));
             }
         });
     }

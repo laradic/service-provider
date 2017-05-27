@@ -7,7 +7,7 @@
  * The license can be found in the package and online at https://laradic.mit-license.org.
  *
  * @copyright Copyright 2017 (c) Robin Radic
- * @license   https://laradic.mit-license.org The MIT License
+ * @license https://laradic.mit-license.org The MIT License
  */
 
 namespace Laradic\ServiceProvider\Plugins;
@@ -66,7 +66,12 @@ trait Routing
      */
     protected $groupMiddleware = [/** [ group => middleware ] */ ];
 
-    protected $middlewarePluginPriority = 30;
+    protected $routesPath = '{packagePath}/routes';
+
+    protected $routeFiles = [];
+
+
+    protected $routingPluginPriority = 30;
 
     /**
      * startMiddlewarePlugin method.
@@ -75,7 +80,7 @@ trait Routing
      */
     protected function startRoutingPlugin($app)
     {
-        $this->requiresPlugins(Paths::class);
+        $this->requiresPlugins(Paths::class, Resources::class);
         $this->onRegister('routing', function (Application $app) {
             if (PHP_SAPI !== 'cli' || $this->app->runningUnitTests()) {
                 $router = $app->make('router');
@@ -90,7 +95,7 @@ trait Routing
                 }
 
                 foreach ($this->routeMiddleware as $name => $class) {
-                    if(method_exists($router, 'middleware')) {
+                    if (method_exists($router, 'middleware')) {
                         $router->middleware($name, $class);
                     } else {
                         $router->aliasMiddleware($name, $class);
@@ -112,8 +117,37 @@ trait Routing
         });
 
         $this->onBoot('routing', function (Application $app) {
+            foreach ($this->routeFiles as $routeFile) {
+                $this->loadRoutesFrom(path_join($this->resolvePath('routesPath'), str_ensure_right($routeFile, '.php')));
+            }
+        });
 
-            $this->routes;
+        static::refreshRoutes($app);
+    }
+
+    protected static $hasPushedRefreshCallback = false;
+
+    /**
+     * refreshRoutes method
+     *
+     * @param \Illuminate\Contracts\Foundation\Application $app
+     *
+     * @return void
+     */
+    private static function refreshRoutes(Application $app)
+    {
+        if (static::$hasPushedRefreshCallback) {
+            return;
+        }
+        static::$hasPushedRefreshCallback = true;
+        $app->booted(function (Application $app) {
+            $routes = $app[ 'router' ]->getRoutes();
+            if (method_exists($routes, 'refreshNameLookups')) {
+                $routes->refreshNameLookups();
+            }
+            if (method_exists($routes, 'refreshActionLookups')) {
+                $routes->refreshActionLookups();
+            }
         });
     }
 
