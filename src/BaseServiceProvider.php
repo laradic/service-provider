@@ -7,7 +7,7 @@
  * The license can be found in the package and online at https://laradic.mit-license.org.
  *
  * @copyright Copyright 2017 (c) Robin Radic
- * @license   https://laradic.mit-license.org The MIT License
+ * @license https://laradic.mit-license.org The MIT License
  */
 
 namespace Laradic\ServiceProvider;
@@ -111,6 +111,7 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
         $this->fs = new Filesystem();
     }
 
+
     /**
      * boot method.
      *
@@ -118,13 +119,7 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
      */
     public function boot()
     {
-        $app = $this->app;
-
-        $this->fireCallbacks('boot', function (Collection $list) {
-            return $list->sortBy('priority');
-        });
-
-        return $app;
+        return $this->bootProvider();
     }
 
     /**
@@ -134,7 +129,21 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
      */
     public function register()
     {
-        $app = $this->app;
+        return $this->registerProvider();
+    }
+
+    private function bootProvider()
+    {
+        $this->fireCallbacks('boot', function (Collection $list) {
+            return $list->sortBy('priority');
+        });
+
+        return $this->app;
+    }
+
+    private function registerProvider()
+    {
+
         $this->resolveDirectories();
 
         if ($this->bootingMethod !== null && method_exists($this, $this->bootingMethod)) {
@@ -169,8 +178,9 @@ abstract class BaseServiceProvider extends LaravelServiceProvider
             });
         }
 
-        return $app;
+        return $this->app;
     }
+
 
     /**
      * startIfNotStarted method.

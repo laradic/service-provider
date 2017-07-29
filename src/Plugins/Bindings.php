@@ -47,14 +47,15 @@ trait Bindings
     protected $singletons = [];
 
     /**
-     * Collection of classes to register as share. Does not make an alias if the value is a class, as is the case with $shared.
+     * Collection of classes to register as singleton. Does not make an alias, as is the case with $shared.
      *
+     * @deprecated
      * @var array
      */
     protected $share = [];
 
     /**
-     * Collection of classes to register as share. Also registers an alias if the value is a class, as opposite to $share.
+     * Collection of classes to register as singleton. Also registers an alias if the value is a class, as opposite to $share.
      *
      * @var array
      */
