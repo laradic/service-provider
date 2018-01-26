@@ -2,11 +2,11 @@
 /**
  * Part of the Laradic PHP Packages.
  *
- * Copyright (c) 2017. Robin Radic.
+ * Copyright (c) 2018. Robin Radic.
  *
  * The license can be found in the package and online at https://laradic.mit-license.org.
  *
- * @copyright Copyright 2017 (c) Robin Radic
+ * @copyright Copyright 2018 (c) Robin Radic
  * @license https://laradic.mit-license.org The MIT License
  */
 
@@ -127,6 +127,11 @@ trait Routing
 
     protected static $hasPushedRefreshCallback = false;
 
+    protected function pushMiddlewareToGroup($group, $class)
+    {
+        $this->getRouter()->pushMiddlewareToGroup($group, $class);
+    }
+
     /**
      * refreshRoutes method
      *
@@ -141,7 +146,7 @@ trait Routing
         }
         static::$hasPushedRefreshCallback = true;
         $app->booted(function (Application $app) {
-            $routes = $app[ 'router' ]->getRoutes();
+            $routes = $app->make('router')->getRoutes();
             if (method_exists($routes, 'refreshNameLookups')) {
                 $routes->refreshNameLookups();
             }
