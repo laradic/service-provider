@@ -32,4 +32,5 @@ abstract class ServiceProvider extends BaseServiceProvider
         Plugins\Paths,
         Plugins\Providers,
         Plugins\Resources;
+
 }

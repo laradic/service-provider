@@ -7,10 +7,13 @@
  * The license can be found in the package and online at https://laradic.mit-license.org.
  *
  * @copyright Copyright 2017 (c) Robin Radic
- * @license https://laradic.mit-license.org The MIT License
+ * @license   https://laradic.mit-license.org The MIT License
  */
 
 namespace Laradic\ServiceProvider\Plugins;
+
+use Illuminate\Contracts\Events\Dispatcher;
+
 
 /**
  * This is the class Events.
@@ -39,6 +42,12 @@ trait Events
      */
     protected $subscribe = [];
 
+    protected $events = [
+//        \Acme\Events\JobDeleted::class => [
+//            \Acme\Listeners\MarkJobAsDeleted::class
+//        ]
+    ];
+
     /**
      * startEventsPlugin method.
      *
@@ -46,8 +55,17 @@ trait Events
      */
     protected function startEventsPlugin($app)
     {
-        $this->onBoot('events', function ($app) {
-            $events = $this->app->make('events');
+        $this->onRegister('events', function ($app) {
+            $events = $this->app->make(Dispatcher::class);
+
+            foreach ($this->events() as $event => $listeners) {
+                foreach ($listeners as $listener) {
+                    $events->listen($event, $listener);
+                }
+            }
+//        })
+//        $this->onBoot('events', function ($app) {
+//            $events = $this->app->make('events');
 
             foreach ($this->listens() as $event => $listeners) {
                 foreach ($listeners as $listener) {
@@ -81,5 +99,17 @@ trait Events
     public function listens()
     {
         return $this->listen;
+    }
+
+    /**
+     * events method
+     *
+     * @return array {
+     *  string[]
+     * }
+     */
+    public function events()
+    {
+        return $this->events;
     }
 }
