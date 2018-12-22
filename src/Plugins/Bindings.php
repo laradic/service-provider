@@ -7,7 +7,7 @@
  * The license can be found in the package and online at https://laradic.mit-license.org.
  *
  * @copyright Copyright 2017 (c) Robin Radic
- * @license https://laradic.mit-license.org The MIT License
+ * @license   https://laradic.mit-license.org The MIT License
  */
 
 namespace Laradic\ServiceProvider\Plugins;
@@ -37,14 +37,14 @@ trait Bindings
      *
      * @var array
      */
-    protected $bindings = [];
+    public $bindings = [];
 
     /**
      * Collection of classes to register as singleton.
      *
      * @var array
      */
-    protected $singletons = [];
+    public $singletons = [];
 
     /**
      * Collection of classes to register as singleton. Does not make an alias, as is the case with $shared.
@@ -90,30 +90,35 @@ trait Bindings
         $this->onRegister('bindings', function (Application $app) {
 
             // Container bindings and aliases
-            foreach ($this->bindings as $binding => $class) {
-                $this->app->bind($binding, $class);
+            $legacy = ! class_exists('Illuminate\Foundation\Application') || version_compare(\Illuminate\Foundation\Application::VERSION, '5.7.0', '<');
+            if ($legacy) {
+                foreach ($this->bindings as $binding => $class) {
+                    $this->app->bind($binding, $class);
+                }
             }
 
             foreach ($this->weaklings as $binding => $class) {
                 $this->bindIf($binding, $class);
             }
 
-            foreach (['share' => $this->share, 'shared' => $this->shared] as $type => $bindings) {
+            foreach ([ 'share' => $this->share, 'shared' => $this->shared ] as $type => $bindings) {
                 foreach ($bindings as $binding => $class) {
                     $this->share($binding, $class, [], $type === 'shared');
                 }
             }
 
-            foreach ($this->singletons as $binding => $class) {
-                if ($this->strict && !class_exists($class) && !interface_exists($class)) {
-                    throw new \Exception(get_called_class().": Could not find alias class [{$class}]. This exception is only thrown when \$strict checking is enabled");
+            if ($legacy) {
+                foreach ($this->singletons as $binding => $class) {
+                    if ($this->strict && ! class_exists($class) && ! interface_exists($class)) {
+                        throw new \Exception(get_called_class() . ": Could not find alias class [{$class}]. This exception is only thrown when \$strict checking is enabled");
+                    }
+                    $this->app->singleton($binding, $class);
                 }
-                $this->app->singleton($binding, $class);
             }
 
             foreach ($this->aliases as $alias => $full) {
-                if ($this->strict && !class_exists($full) && !interface_exists($full)) {
-                    throw new \Exception(get_called_class().": Could not find alias class [{$full}]. This exception is only thrown when \$strict checking is enabled");
+                if ($this->strict && ! class_exists($full) && ! interface_exists($full)) {
+                    throw new \Exception(get_called_class() . ": Could not find alias class [{$full}]. This exception is only thrown when \$strict checking is enabled");
                 }
                 $this->app->alias($alias, $full);
             }
@@ -130,7 +135,7 @@ trait Bindings
      */
     protected function bindIf($abstract, $concrete = null, $shared = true, $alias = null)
     {
-        if (!$this->app->bound($abstract)) {
+        if ( ! $this->app->bound($abstract)) {
             $concrete = $concrete ?: $abstract;
 
             $this->app->bind($abstract, $concrete, $shared);
