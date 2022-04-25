@@ -1,36 +1,27 @@
 <?php
-/**
- * Part of the Laradic PHP Packages.
- *
- * Copyright (c) 2017. Robin Radic.
- *
- * The license can be found in the package and online at https://laradic.mit-license.org.
- *
- * @copyright Copyright 2017 (c) Robin Radic
- * @license https://laradic.mit-license.org The MIT License
- */
 
 namespace Laradic\ServiceProvider;
 
-/**
- * This is the class ServiceProvider.
- *
- * @author         CLI
- * @copyright      Copyright (c) 2015, CLI. All rights reserved
- *
- * @property \Illuminate\Contracts\Config\Repository $config
- */
-abstract class ServiceProvider extends BaseServiceProvider
-{
-    use Plugins\Bindings,
-        Plugins\Commands,
-        Plugins\Config,
-        Plugins\Events,
-        Plugins\Facades,
-        Plugins\Helpers,
-        Plugins\Routing,
-        Plugins\Paths,
-        Plugins\Providers,
-        Plugins\Resources;
+use Laradic\ServiceProvider\Concerns\Bindings;
+use Laradic\ServiceProvider\Concerns\Configs;
+use Laradic\ServiceProvider\Concerns\Events;
+use Laradic\ServiceProvider\Concerns\Facades;
+use Laradic\ServiceProvider\Concerns\Policies;
+use Laradic\ServiceProvider\Concerns\Publishes;
+use Laradic\ServiceProvider\Concerns\Routes;
+use Laradic\ServiceProvider\Concerns\Runs;
+use Laradic\ServiceProvider\Concerns\Seeding;
 
+class ServiceProvider extends BaseServiceProvider
+{
+    use Events;
+    use Bindings;
+    use Configs;
+    use Events;
+    use Facades;
+    use Policies;
+    use Publishes;
+    use Routes;
+    use Runs;
+    use Seeding;
 }

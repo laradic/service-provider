@@ -1,21 +1,21 @@
 {
     "name": "laradic/service-provider",
-    "description": "Laravel 5 service provider on steroids. Lots of extras.",
-    "homepage": "https://la.radic.nl",
+    "description": "Laravel service provider on steroids. Lots of extras.",
+    "homepage": "https://github.com/laradic",
     "keywords": ["laravel", "laradic", "container", "ioc", "provider", "service", "repositories", "structure"],
     "license": "MIT",
     "authors": [
-        {"name": "Robin Radic", "homepage": "http://robin.radic.nl", "email": "robin@radic.nl", "role": "Developer"}
+        {"name": "Robin Radic", "homepage": "https://github.com/robinradic" }
     ],
     "require": {
         "php": ">=7.0.0",
-        "illuminate/support": "~5.0",
-        "laradic/support": "~1.0"
+        "illuminate/support": "^5.0|^6.0|^7.0|^8.0|^9.0",
+        "symfony/filesystem": "^6.0"
     },
     "require-dev": {
         "fabpot/php-cs-fixer": "~1.9",
-        "phpunit/phpunit": "~4.0|~5.0|~6.0",
-        "mockery/mockery": "0.9.*"
+        "phpunit/phpunit": "^4.0|^5.0|^6.0|^7.0|^8.0|^9.0",
+        "mockery/mockery": "^1.4.4"
     },
     "autoload": {
         "psr-4": {

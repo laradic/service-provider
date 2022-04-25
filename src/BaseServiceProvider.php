@@ -1,419 +1,127 @@
 <?php
-/**
- * Part of the Laradic PHP Packages.
- *
- * Copyright (c) 2017. Robin Radic.
- *
- * The license can be found in the package and online at https://laradic.mit-license.org.
- *
- * @copyright Copyright 2017 (c) Robin Radic
- * @license https://laradic.mit-license.org The MIT License
- */
 
 namespace Laradic\ServiceProvider;
 
-use Closure;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Collection;
-use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
-use Laradic\ServiceProvider\Exception\ProviderPluginDependencyException;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use ReflectionClass;
 
-/**
- * This is the class BaseServiceProvider.
- *
- * @author  Robin Radic
- */
-abstract class BaseServiceProvider extends LaravelServiceProvider
+class BaseServiceProvider extends \Illuminate\Support\ServiceProvider
 {
-    // base
+    private string $currentDir;
 
-    /** @var array */
-    protected $provides = [];
+    private Dispatcher $dispatcher;
 
-    /** @var \Illuminate\Filesystem\Filesystem */
-    protected $fs;
+    private ReflectionClass $reflection;
 
-    // magic
+    private bool $started = false;
 
-    /** @var array */
-    protected $getVariables = [];
-
-    /** @var array */
-    protected $callCallbacks = [];
-
-    /**
-     * Methods names to call on boot.
-     *
-     * @var array
-     */
-    protected $onBoot = [];
-
-    /**
-     * Methods names to call on register.
-     *
-     * @var array
-     */
-    protected $onRegister = [];
-
-    // plugins
-
-    /** @var bool */
-    private $started = false;
-
-    /** @var array */
-    private $registerCallbacks = [];
-
-    /** @var array */
-    private $bootCallbacks = [];
-
-    /** @var array */
-    private $providesCallbacks = [];
-
-    // directories
-
-    /** @var */
-    private $dir;
-
-    /** @var */
-    private $rootDir;
-
-    /** @var bool */
-    protected $scanDirs = true;
-
-    /** @var int */
-    protected $scanDirsMaxLevel = 4;
-
-    // extra event handlers
-
-    /**
-     * Declaring the method named here will make it so it will be called on application booting.
-     *
-     * @var string|null
-     */
-    protected $bootingMethod = 'booting';
-
-    /**
-     * Declaring the method named here will make it so it will be called when the application has booted.
-     *
-     * @var string|null
-     */
-    protected $bootedMethod = 'booted';
-
-    /**
-     * {@inheritdoc}
-     */
-    public function __construct(Application $app)
+    public function __construct($app)
     {
         parent::__construct($app);
+        $this->dispatcher = $app->make(Dispatcher::class);
+        $this->reflection = new ReflectionClass($this);
+        $this->currentDir = dirname($this->reflection->getFileName());
         $this->startIfNotStarted();
-        $this->fs = new Filesystem();
     }
 
-
-    /**
-     * boot method.
-     *
-     * @return \Illuminate\Contracts\Foundation\Application
-     */
-    public function boot()
-    {
-        return $this->bootProvider();
-    }
-
-    /**
-     * register method.
-     *
-     * @return \Illuminate\Contracts\Foundation\Application
-     */
-    public function register()
-    {
-        return $this->registerProvider();
-    }
-
-    private function bootProvider()
-    {
-        $this->fireCallbacks('boot', function (Collection $list) {
-            return $list->sortBy('priority');
-        });
-
-        return $this->app;
-    }
-
-    private function registerProvider()
-    {
-
-        $this->resolveDirectories();
-
-        if ($this->bootingMethod !== null && method_exists($this, $this->bootingMethod)) {
-            $this->app->booting(function (Application $app) {
-                $app->call([ $this, $this->bootingMethod ]);
-            });
-        }
-
-        if ($this->bootedMethod !== null && method_exists($this, $this->bootedMethod)) {
-            $this->app->booted(function (Application $app) {
-                $app->call([ $this, $this->bootedMethod ]);
-            });
-        }
-
-        $this->fireCallbacks('register', function (Collection $list) {
-            return $list->sortBy('priority');
-        });
-
-        foreach ($this->onRegister as $method) {
-            $this->onRegister($method, function () use ($method) {
-                if (method_exists($this, $method)) {
-                    $this->$method();
-                }
-            });
-        }
-
-        foreach ($this->onBoot as $method) {
-            $this->onBoot($method, function () use ($method) {
-                if (method_exists($this, $method)) {
-                    $this->$method();
-                }
-            });
-        }
-
-        return $this->app;
-    }
-
-
-    /**
-     * startIfNotStarted method.
-     */
     private function startIfNotStarted()
     {
         if (true === $this->started) {
             return;
         }
         $this->started = true;
-        $this->startPluginTraits();
+        $this->callTraits();
     }
 
-    /**
-     * startPluginTraits method.
-     */
-    private function startPluginTraits()
+    private function callTraits()
     {
-        foreach ($this->getPluginTraits() as $trait) {
-            if (method_exists(get_called_class(), $method = 'start' . class_basename($trait) . 'Plugin')) {
-                call_user_func([ $this, $method ], $this->app);
+        foreach ($this->getTraits() as $trait) {
+            if (method_exists(get_called_class(), $methodName = 'init' . class_basename($trait) . 'Trait')) {
+                $this->callPrivateMethod($methodName);
             }
         }
     }
 
-    /**
-     * getPluginTraits method.
-     *
-     * @return array
-     */
-    private function getPluginTraits()
+    private function getTraits()
     {
         return array_values(class_uses_recursive(get_called_class()));
     }
 
-    /**
-     * requiresPlugins method.
-     */
-    public function requiresPlugins()
+    private function reflectionPath($path)
     {
-        $has     = class_uses_recursive(get_called_class());
-        $check   = array_combine(func_get_args(), func_get_args());
-        $missing = array_values(array_diff($check, $has));
-        if (isset($missing[ 0 ])) {
-            $plugin = collect(debug_backtrace())->where('function', 'requiresPlugins')->first();
-            throw ProviderPluginDependencyException::plugin($plugin[ 'file' ], implode(', ', $missing));
+        if (Path::isAbsolute($path)) {
+            return $path;
         }
+        return Path::join($this->currentDir, $path);
     }
 
-    /**
-     * resolveDirectories method.
-     */
-    private function resolveDirectories()
+    protected function callPrivateMethod(string $methodName, mixed ...$arguments)
     {
-        if ($this->scanDirs !== true) {
-            return;
+        $method = $this->reflection->getMethod($methodName);
+        $method->setAccessible(true);
+        $result = $method->invoke($this, ...$arguments);
+        $method->setAccessible(false);
+        return $result;
+    }
+
+    /** @var array */
+    private $resolvedPaths;
+
+    protected function resolvePath($name, array $extras = [])
+    {
+        if ($this->resolvedPaths === null) {
+            $this->resolvedPaths = $this->getPaths();
         }
-        if ($this->rootDir === null) {
-            $class     = new ReflectionClass(get_called_class());
-            $filePath  = $class->getFileName();
-            $this->dir = $rootDir = path_get_directory($filePath);
-            $found     = false;
-            for ($i = 0; $i < $this->scanDirsMaxLevel; ++$i) {
-                if (file_exists($composerPath = path_join($rootDir, 'composer.json'))) {
-                    $found = true;
-                    break;
-                } else {
-                    $rootDir = path_get_directory($rootDir); // go 1 up
+        if (str_contains($this->resolvedPaths[ $name ], ['{', '}'])) {
+            preg_match_all('/{(.*?)}/', $this->resolvedPaths[ $name ], $matches);
+            foreach ($matches[ 0 ] as $i => $match) {
+                $var = $matches[ 1 ][ $i ];
+                if (false === array_key_exists($var, $this->resolvedPaths)) {
+                    continue;
                 }
+                $this->resolvedPaths[ $name ] = str_replace($match, $this->resolvePath($var, $extras), $this->resolvedPaths[ $name ]);
             }
-            if ($found === false) {
-                throw new \OutOfBoundsException("Could not determinse composer.json file location in [{$this->dir}] or in {$this->scanDirsMaxLevel} parents of [$this->rootDir}]");
+
+            foreach ($extras as $key => $val) {
+                $this->resolvedPaths[ $name ] = str_replace('{'.$key.'}', $val, $this->resolvedPaths[ $name ]);
             }
-            $this->rootDir = $rootDir;
         }
 
-        $this->dir = $this->dir ?: path_join($this->rootDir, 'src');
+        return $this->resolvedPaths[ $name ];
     }
 
-    /**
-     * addProvides method.
-     *
-     * @param          $name
-     * @param \Closure $callback
-     */
-    public function addProvides($name, Closure $callback)
+    private function getPaths()
     {
-        $this->providesCallbacks[] = compact('name', 'callback');
-    }
-
-    /**
-     * getPluginPriority method.
-     *
-     * @param     $name
-     * @param int $index If a plugin priority is defined as array, the 0 index is for register and 1 for boot
-     *
-     * @return int|mixed
-     */
-    private function getPluginPriority($name, $index = 0)
-    {
-        $priority = 10;
-        if (property_exists($this, "{$name}PluginPriority")) {
-            $value    = $this->{$name . 'PluginPriority'};
-            $priority = is_array($value) ? $value[ $index ] : $value;
-        }
-
-        return $priority;
-    }
-
-    /**
-     * onRegister method.
-     *
-     * @param          $name
-     * @param \Closure $callback
-     */
-    public function onRegister($name, Closure $callback)
-    {
-        $priority                  = $this->getPluginPriority($name);
-        $this->registerCallbacks[] = compact('name', 'priority', 'callback');
-    }
-
-    /**
-     * onBoot method.
-     *
-     * @param          $name
-     * @param \Closure $callback
-     */
-    public function onBoot($name, Closure $callback)
-    {
-        $priority              = $this->getPluginPriority($name, 1);
-        $this->bootCallbacks[] = compact('name', 'priority', 'callback');
-    }
-
-    /**
-     * fireCallbacks method.
-     *
-     * @param               $name
-     * @param \Closure|null $modifier
-     * @param \Closure|null $caller
-     */
-    private function fireCallbacks($name, Closure $modifier = null, Closure $caller = null)
-    {
-        $list = collect($this->{$name . 'Callbacks'});
-        if ($modifier) {
-            $list = call_user_func_array($modifier, [ $list ]);
-        }
-        $caller = $caller ?: function (Closure $callback) {
-            $callback->bindTo($this);
-            $callback($this->app);
-        };
-        $list->pluck('callback')->each($caller);
-    }
-
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
-    {
-        $provides = $this->provides;
-
-        $this->fireCallbacks('provides', null, function (Closure $callback) use (&$provides) {
-            $result = $callback->call($this, $this->app, $provides);
-            if (is_array($result)) {
-                $provides = array_merge($provides, $result);
-            }
+        $paths = Arr::dot(['path' => $this->getLaravelPaths()]);
+        collect(array_keys(get_class_vars(get_class($this))))->filter(function ($propertyName) {
+            return Str::endsWith($propertyName, 'Path');
+        })->each(function ($propertyName) use (&$paths) {
+            $paths[ $propertyName ] = $this->{$propertyName};
         });
+//        $paths[ 'packagePath' ] = $this->getRootDir();
 
-//        foreach ( $this->providers as $provider ) {
-//            $instance = $this->app->resolveProviderClass($provider);
-
-//            $provides = array_merge($provides, $instance->provides());
-//        }
-
-//        $commands = [ ];
-//        foreach ( $this->commands as $k => $v ) {
-//            if ( is_string($k) ) {
-//                $commands[] = $k;
-//            }
-//        }
-
-//        return array_merge(
-//            $provides,
-//            array_keys($this->aliases),
-//            array_keys($this->bindings),
-//            array_keys($this->share),
-//            array_keys($this->shared),
-//            array_keys($this->singletons),
-//            array_keys($this->weaklings),
-//            $commands
-//        );
-        return $provides;
+        return $paths;
     }
 
-    /**
-     * @return string|null
-     */
-    public function getRootDir()
+    private function getLaravelPaths()
     {
-        return $this->rootDir;
-    }
-
-    /**
-     * __call method.
-     *
-     * @param       $method
-     * @param array $params
-     *
-     * @return mixed
-     */
-    public function __call($method, $params = [])
-    {
-        if ($this->callCallbacks[ $method ]) {
-            return call_user_func_array($method, $params);
+        $paths = [
+            'app' => $this->app[ 'path' ],
+            'envFile' => $this->app->environmentFilePath(),
+            'env' => $this->app->environmentPath(),
+            'cached' => [
+                'config' => $this->app->getCachedConfigPath(),
+                'routes' => $this->app->getCachedRoutesPath(),
+                'services' => $this->app->getCachedServicesPath(),
+            ],
+        ];
+        foreach (['base', 'lang', 'config', 'public', 'storage', 'database', 'bootstrap'] as $key) {
+            $paths[ $key ] = $this->app[ 'path.'.$key ];
         }
-        throw new \BadMethodCallException("Method [{$method}] not found");
-    }
+        $paths[ 'resource' ] = resource_path();
 
-    /**
-     * __get method.
-     *
-     * @param $name
-     *
-     * @return mixed
-     */
-    public function __get($name)
-    {
-        if (isset($this->getVariables[ $name ])) {
-            $var = $this->getVariables[ $name ];
-            if ($var instanceof Closure) {
-                return $var($this);
-            }
-        }
+        return $paths;
     }
 }
